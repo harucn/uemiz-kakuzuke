@@ -1,8 +1,9 @@
-import { move, type Position } from "../deck/cursor.ts";
+import { move, type Deck, type Intro, type Position } from "../deck/cursor.ts";
 import type { Intent } from "./protocol.ts";
 
 export type VenueState =
   | { readonly phase: "title" }
+  | { readonly phase: Intro }
   | { readonly phase: "asking"; readonly index: number }
   /** run は正解発表を押した回数 */
   | { readonly phase: "revealed"; readonly index: number; readonly run: number };
@@ -10,25 +11,25 @@ export type VenueState =
 export const TITLE: VenueState = { phase: "title" };
 
 export function positionOf(state: VenueState): Position {
-  return state.phase === "title" ? "title" : state.index;
+  return "index" in state ? state.index : state.phase;
 }
 
 function at(position: Position): VenueState {
-  return position === "title" ? TITLE : { phase: "asking", index: position };
+  return typeof position === "number" ? { phase: "asking", index: position } : { phase: position };
 }
 
 /** 状態が変わらないときは同じオブジェクトを返す（会場は保存も配信もしない） */
-export function step(state: VenueState, intent: Intent, total: number): VenueState {
+export function step(state: VenueState, intent: Intent, deck: Deck): VenueState {
   switch (intent.type) {
     case "next":
     case "prev": {
       const from = positionOf(state);
-      const to = move(from, intent.type === "next" ? 1 : -1, total);
+      const to = move(from, intent.type === "next" ? 1 : -1, deck);
       return to === from ? state : at(to);
     }
     case "reveal":
-      // タイトル画面の Space・Enter はリモコンの連打で第 1 問の正解発表まで進まないよう無視する
-      if (state.phase === "title") return state;
+      // 問題の前の画面の Space・Enter はリモコンの連打で第 1 問の正解発表まで進まないよう無視する
+      if (!("index" in state)) return state;
       return state.phase === "asking"
         ? { phase: "revealed", index: state.index, run: 1 }
         : { phase: "revealed", index: state.index, run: state.run + 1 };

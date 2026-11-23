@@ -66,8 +66,9 @@ describe("正解発表の再演出", () => {
     expectTypeOf<Parameters<typeof revealView>>().toEqualTypeOf<[q: Question]>();
     const questions = [pick, order] as const;
     const reveal = { type: "reveal" } as const;
-    const first = step({ phase: "asking", index: 1 }, reveal, questions.length);
-    const second = step(first, reveal, questions.length);
+    const deck = { total: questions.length, intro: [] };
+    const first = step({ phase: "asking", index: 1 }, reveal, deck);
+    const second = step(first, reveal, deck);
     expect(second).toMatchObject({ phase: "revealed", index: 1, run: 2 });
     expect(revealView(questions[second.phase === "revealed" ? second.index : 0])).toEqual({
       headline: "正解は A → C → B",

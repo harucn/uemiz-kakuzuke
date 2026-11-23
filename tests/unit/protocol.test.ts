@@ -28,8 +28,8 @@ describe("parseIntent", () => {
 });
 
 describe("parseServerFrame", () => {
-  it("3 種類の画面の状態を読む", () => {
-    for (const view of [{ phase: "title" }, { phase: "asking", index: 2 }, { phase: "revealed", index: 1, run: 2, reveal }]) {
+  it("5 種類の画面の状態を読む", () => {
+    for (const view of [{ phase: "title" }, { phase: "rules" }, { phase: "prizes" }, { phase: "asking", index: 2 }, { phase: "revealed", index: 1, run: 2, reveal }]) {
       expect(parseServerFrame(frame(view))?.view).toEqual(view);
     }
   });
@@ -37,6 +37,8 @@ describe("parseServerFrame", () => {
   it.each([
     ["JSON でない", "{"],
     ["タイトル画面に問題番号", frame({ phase: "title", index: 0 })],
+    ["ルール画面に問題番号", frame({ phase: "rules", index: 0 })],
+    ["ランクと景品の画面に問題番号", frame({ phase: "prizes", index: 0 })],
     ["出題中に正解情報", frame({ phase: "asking", index: 0, reveal })],
     ["正解発表に正解情報がない", frame({ phase: "revealed", index: 0, run: 1 })],
     ["正解情報に余計な項目", frame({ phase: "revealed", index: 0, run: 1, reveal: { ...reveal, extra: 1 } })],

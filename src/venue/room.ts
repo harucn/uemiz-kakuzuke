@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { deckOf } from "../deck/cursor.ts";
 import type { QuestionSet } from "../question-set/model.ts";
 import { step, TITLE, type VenueState } from "./machine.ts";
 import { parseIntent, type Role, type ServerFrame } from "./protocol.ts";
@@ -12,6 +13,8 @@ const StoredSchema = z.strictObject({
   version: z.string(),
   state: z.discriminatedUnion("phase", [
     z.strictObject({ phase: z.literal("title") }),
+    z.strictObject({ phase: z.literal("rules") }),
+    z.strictObject({ phase: z.literal("prizes") }),
     z.strictObject({ phase: z.literal("asking"), index }),
     z.strictObject({ phase: z.literal("revealed"), index, run: z.number().int().positive() }),
   ]),
@@ -61,7 +64,7 @@ export class VenueRoom {
     if (!this.#ctx.getTags(ws).includes("host")) return;
     const intent = parseIntent(data);
     if (intent === null) return;
-    const next = step(this.#state, intent, this.#deps.set.questions.length);
+    const next = step(this.#state, intent, deckOf(this.#deps.set));
     if (next === this.#state) return;
     this.#state = next;
     this.#save();

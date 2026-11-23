@@ -27,8 +27,21 @@ export interface Question {
 export type QuestionSet = {
   /** 会のタイトル。参加者にも見える */
   readonly title: string;
+  /** ゲームのルール。空ならルール画面を出さない。参加者にも見える */
+  readonly rules: readonly string[];
+  /** 正解数で決まるランクと景品。上のランクから並べる。空ならランクと景品の画面を出さない。参加者にも見える */
+  readonly prizes: readonly Prize[];
   readonly questions: readonly [Question, ...Question[]];
 } & { readonly __brand: "QuestionSet" };
+
+export interface Prize {
+  /** 例 "1流" */
+  readonly rank: string;
+  /** 例 "4問正解" */
+  readonly condition: string;
+  /** 例 "景品を3つ" */
+  readonly prize: string;
+}
 
 export type PublicOption = Pick<Option, "image" | "note">;
 export type PublicQuestion = Pick<Question, "mode" | "title" | "description"> & {
@@ -36,10 +49,12 @@ export type PublicQuestion = Pick<Question, "mode" | "title" | "description"> & 
 };
 export type PublicQuestionSet = {
   readonly title: string;
+  readonly rules: readonly string[];
+  readonly prizes: readonly Prize[];
   readonly questions: readonly [PublicQuestion, ...PublicQuestion[]];
 };
 
-export const PUBLIC_SET_KEYS = ["title", "questions"] as const;
+export const PUBLIC_SET_KEYS = ["title", "rules", "prizes", "questions"] as const;
 export const PUBLIC_QUESTION_KEYS = ["mode", "title", "description", "options"] as const;
 export const PUBLIC_OPTION_KEYS = ["image", "note"] as const;
 
@@ -63,7 +78,12 @@ function toPublicQuestion(q: Question): PublicQuestion {
 /** 許可リスト方式の射影。spread も omit も使わず項目ごとに新しいオブジェクトを作るので、後から足した項目は既定で非公開になる */
 export function toPublic(set: QuestionSet): PublicQuestionSet {
   const [first, ...rest] = set.questions;
-  return { title: set.title, questions: [toPublicQuestion(first), ...rest.map(toPublicQuestion)] };
+  return {
+    title: set.title,
+    rules: [...set.rules],
+    prizes: set.prizes.map((p) => ({ rank: p.rank, condition: p.condition, prize: p.prize })),
+    questions: [toPublicQuestion(first), ...rest.map(toPublicQuestion)],
+  };
 }
 
 export type Answer =

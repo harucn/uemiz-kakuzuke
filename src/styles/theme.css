@@ -302,6 +302,43 @@ body {
   grid-template-columns: auto;
   justify-content: end;
 }
+/* ルール画面とランクと景品の画面（IntroScreen）。番号とランクはラベルと同じ書体で赤く出す */
+.intro {
+  min-height: 0;
+  display: grid;
+  align-content: center;
+}
+.intro-rules {
+  margin: 0;
+  display: grid;
+}
+.intro-rules li::marker {
+  font-family: var(--label);
+  color: var(--red);
+}
+.intro-prizes {
+  justify-self: start;
+  border-collapse: collapse;
+}
+.intro-prizes th {
+  font-weight: 400;
+  text-align: left;
+  color: var(--red);
+}
+.intro-prizes tr + tr > * {
+  border-top: 2px dashed var(--mute);
+}
+.intro--host {
+  font-size: 3.2cqw;
+  line-height: 1.4;
+}
+.intro--host .intro-rules {
+  padding-left: 5cqw;
+  gap: 1.6cqw;
+}
+.intro--host .intro-prizes :is(th, td) {
+  padding: 1.4cqw 4cqw 1.4cqw 0;
+}
 
 /* 参加者画面: スマホの縦長 1 列。広い画面では中央に寄せる */
 .guest {
@@ -354,6 +391,21 @@ body {
 .guest-reveal__headline {
   color: var(--rose);
   font-size: 18px;
+}
+.intro--guest {
+  font-size: 17px;
+  line-height: 1.5;
+}
+.intro--guest .intro-rules {
+  padding-left: 28px;
+  gap: 12px;
+}
+.intro--guest .intro-prizes :is(th, td) {
+  padding: 10px 16px 10px 0;
+}
+/* 参加者画面はルールとランクと景品を並べるので、2 つ目の見出しの前を空ける */
+.intro--guest + .guest-title {
+  margin-top: 20px;
 }
 /* 参加者画面のタイトル画面。司会が始めるまでタイトルだけを出す */
 .guest-cover {

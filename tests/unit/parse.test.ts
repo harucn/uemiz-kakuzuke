@@ -48,6 +48,8 @@ describe("問題セットのデータ形式", () => {
       ok: true,
       set: {
         title: "2026 忘年会 格付けチェック",
+        rules: [],
+        prizes: [],
         questions: [
           {
             mode: "pick",
@@ -266,6 +268,49 @@ describe("問題名と説明に正解情報を含めない", () => {
     const result = parseQuestionSet({ title: "B は 1本 5万円のシャトー・マルゴー。A はスーパーで買える赤ワインでした。", questions: [wine] }, images);
     expect(issuesOf(result)).toStrictEqual([
       { code: "public-text-leak", path: ["title"], message: "参加者に見える文に解説「B は 1本 5万円のシャトー・マルゴー。A はスーパーで買える赤ワインでした。」が含まれています" },
+    ]);
+  });
+
+  it("ルールは書いた順に読み、省略すると空にする", () => {
+    const rules = ["写真を見て、値段の高いものを当てる", "答えは手元の紙に書く"];
+    const result = parseQuestionSet({ title, rules, questions: [wine] }, images);
+    expect(result.ok && result.set.rules).toStrictEqual(rules);
+  });
+
+  it.each([
+    ["空のルール", [""], ["rules", 0]],
+    ["リストでない", "写真を見て当てる", ["rules"]],
+  ])("ルールの形が誤っている問題セットは検証に失敗する（%s）", (_, rules, path) => {
+    expect(codesAndPaths(parseQuestionSet({ title, rules, questions: [wine] }, images))).toStrictEqual([["shape", path]]);
+  });
+
+  it("ランクと景品は書いた順に読み、省略すると空にする", () => {
+    const prizes = [
+      { rank: "1流", condition: "4問正解", prize: "景品を3つ" },
+      { rank: "3流", condition: "1問以下", prize: "景品を1つ" },
+    ];
+    const result = parseQuestionSet({ title, prizes, questions: [wine] }, images);
+    expect(result.ok && result.set.prizes).toStrictEqual(prizes);
+    const omitted = parseQuestionSet({ title, questions: [wine] }, images);
+    expect(omitted.ok && omitted.set.prizes).toStrictEqual([]);
+  });
+
+  it("景品が空のランクは検証に失敗する", () => {
+    const prizes = [{ rank: "1流", condition: "4問正解", prize: "" }];
+    expect(codesAndPaths(parseQuestionSet({ title, prizes, questions: [wine] }, images))).toStrictEqual([["shape", ["prizes", 0, "prize"]]]);
+  });
+
+  it("景品に写真のファイル名を含む問題セットは検証に失敗する", () => {
+    const prizes = [{ rank: "1流", condition: "4問正解", prize: "ボルドーを1本" }];
+    expect(issuesOf(parseQuestionSet({ title, prizes, questions: [wine] }, images))).toStrictEqual([
+      { code: "public-text-leak", path: ["prizes", 0, "prize"], message: "参加者に見える文に写真のファイル名「ボルドー」が含まれています" },
+    ]);
+  });
+
+  it("ルールに解説や写真のファイル名を含む問題セットは検証に失敗する", () => {
+    const rules = ["写真を見て当てる", "ボルドーは高い"];
+    expect(issuesOf(parseQuestionSet({ title, rules, questions: [wine] }, images))).toStrictEqual([
+      { code: "public-text-leak", path: ["rules", 1], message: "参加者に見える文に写真のファイル名「ボルドー」が含まれています" },
     ]);
   });
 

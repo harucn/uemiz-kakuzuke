@@ -3,6 +3,7 @@ import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { parse as parseYaml } from "yaml";
 import { LEAK_CANARY } from "../../src/guest/leak-canary.ts";
+import { deckOf } from "../../src/deck/cursor.ts";
 import { PONG } from "../../src/venue/protocol.ts";
 import { revealView } from "../../src/venue/view.ts";
 import { secretStrings, type Label } from "../../src/question-set/model.ts";
@@ -19,6 +20,7 @@ const set = loadQuestionSet(root);
 const { questions } = set;
 const secrets = secretStrings(set);
 const last = questions.length - 1;
+const { intro } = deckOf(set);
 const contentDir = path.resolve(root, process.env.KAKUZUKE_CONTENT_DIR ?? "content");
 const authored = parseYaml(readFileSync(path.join(contentDir, "questions.yaml"), "utf8")) as {
   readonly questions: readonly { readonly options: readonly { readonly image: string }[] }[];
@@ -42,6 +44,28 @@ async function expectQuestion(page: Page, index: number) {
   await expectOptions(page, q.options);
 }
 
+const prizeRows = set.prizes.map((p) => `${p.rank}${p.condition}${p.prize}`);
+
+/** 司会画面の問題の前の画面に、その画面の見出しと書いた中身だけが書いた順に出ている */
+async function expectIntro(page: Page, screen: (typeof intro)[number]) {
+  if (screen === "rules") {
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("ルール");
+    await expect(page.getByRole("listitem")).toHaveText([...set.rules]);
+    await expect(page.getByRole("row")).toHaveCount(0);
+  } else {
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("ランクと景品");
+    await expect(page.getByRole("row")).toHaveText(prizeRows);
+    await expect(page.getByRole("listitem")).toHaveCount(0);
+  }
+}
+
+/** 参加者画面は、司会画面が問題の前のどの画面でも、ルールとランクと景品を両方とも出している */
+async function expectGuestIntro(page: Page) {
+  await expect(page.getByRole("heading", { level: 2 })).toHaveText(intro.map((s) => (s === "rules" ? /ルール/ : /ランクと景品/)));
+  await expect(page.getByRole("listitem")).toHaveText([...set.rules]);
+  await expect(page.getByRole("row")).toHaveText(prizeRows);
+}
+
 /** 画面ごとに、枠に収まるべき要素（名前と CSS セレクタ）と、少なくともいくつ測るか */
 const LAYOUTS = {
   question: {
@@ -59,6 +83,22 @@ const LAYOUTS = {
     targets: [
       ["タイトル", ".host-cover__title"],
       ["QR コード", ".qr"],
+      ["ボタン", ".host-btns button"],
+    ],
+    min: 5,
+  },
+  rules: {
+    targets: [
+      ["見出し", ".host-title"],
+      ["ルール", ".intro-rules li"],
+      ["ボタン", ".host-btns button"],
+    ],
+    min: 5,
+  },
+  prizes: {
+    targets: [
+      ["見出し", ".host-title"],
+      ["ランク", ".intro-prizes tr"],
       ["ボタン", ".host-btns button"],
     ],
     min: 5,
@@ -99,6 +139,8 @@ async function overflows(page: Page, layout: keyof typeof LAYOUTS): Promise<stri
     }
     const msg = document.querySelector(".msg");
     if (msg !== null && msg.scrollHeight > msg.clientHeight) found.push(`メッセージ欄の中身が切れる（${msg.scrollHeight} > ${msg.clientHeight}）`);
+    const body = document.querySelector(".intro");
+    if (body !== null && body.scrollHeight > body.clientHeight) found.push(`本文が欄に収まらない（${body.scrollHeight} > ${body.clientHeight}）`);
     return found;
   }, LAYOUTS[layout]);
 }
@@ -155,6 +197,12 @@ test.describe("司会画面", () => {
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(set.title);
       await expect(page.getByRole("img", { name: "参加者画面の QR コード" })).toBeVisible();
       expect(await overflows(page, "title"), "タイトル画面").toEqual([]);
+      for (const screen of intro) {
+        await driver.next(page);
+        await expectIntro(page, screen);
+        await expect(revealButton(page), `${screen} の画面に正解発表ボタンを出さない`).toHaveCount(0);
+        expect(await overflows(page, screen), `${screen} の画面`).toEqual([]);
+      }
       for (let i = 0; i <= last; i++) {
         await driver.next(page);
         await expectQuestion(page, i);
@@ -200,6 +248,10 @@ test.describe("参加者画面", () => {
     await expect.poll(() => traffic.frames.length, "会場につながった").toBeGreaterThan(0);
     const host = await connectHost(baseURL!);
     try {
+      for (const _ of intro) {
+        await operate(host, "next");
+        await expectGuestIntro(page);
+      }
       for (let i = 0; i <= last; i++) {
         await operate(host, "next");
         await expectQuestion(page, i);
@@ -217,7 +269,9 @@ test.describe("参加者画面", () => {
       .filter(({ type }) => !TEXT_TYPE.test(type) && !BINARY_TYPE.test(type));
     expect(unknown, "中身を検査できない種類の応答").toEqual([]);
 
-    expect(traffic.frames.filter((f) => f !== PONG), "つないだ直後と各問題のフレームを受け取っている").toHaveLength(questions.length + 1);
+    expect(traffic.frames.filter((f) => f !== PONG), "つないだ直後・問題の前の画面・各問題のフレームを受け取っている").toHaveLength(
+      1 + intro.length + questions.length,
+    );
     expect(texts.some(({ text }) => findSecrets(text, [LEAK_CANARY]).length > 0), "陽性対照: 応答の中身からカナリアを読める").toBe(true);
     const leaks = texts.flatMap(({ url, text }) => findSecrets(text, secrets).map((hit) => `${url}: 「${hit.secret}」 …${hit.context}…`));
     expect(leaks).toEqual([]);
