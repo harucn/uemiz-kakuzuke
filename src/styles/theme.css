@@ -422,6 +422,13 @@ body {
   line-height: 1.3;
   color: var(--green-deep);
 }
+.guest-cover__note {
+  margin: 24px 0 0;
+  font-size: 15px;
+}
+.guest-cover__note > span {
+  display: block;
+}
 
 /* 選択肢の置き場所（CardSlot）。めくっている間だけ、新しい面（--back）を今の面と背中合わせに重ねる。
    --order はめくり始める順番で、CardSlot が style で上書きする */

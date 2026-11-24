@@ -9,6 +9,7 @@ import { OptionCard } from "../ui/OptionCard.tsx";
 import type { VenueView } from "../venue/protocol.ts";
 import { useVenue } from "../venue/useVenue.ts";
 import { LEAK_CANARY } from "./leak-canary.ts";
+import { VIEW_ONLY_NOTE } from "./view-only-note.ts";
 
 type QuestionPhase = Exclude<VenueView, { readonly phase: "title" | Intro }>;
 
@@ -39,6 +40,11 @@ export function GuestScreen({ set }: { readonly set: PublicQuestionSet }) {
       {shown === null ? (
         <div className="guest-cover">
           <h1 className="guest-cover__title">{set.title}</h1>
+          <p className="guest-cover__note">
+            {VIEW_ONLY_NOTE.map((line) => (
+              <span key={line}>{line}</span>
+            ))}
+          </p>
         </div>
       ) : typeof shown === "string" ? (
         // 司会画面はルールとランクと景品を 1 画面ずつ出すが、スマホは縦にスクロールできるので両方を並べ、どちらの間も読み返せるようにする
