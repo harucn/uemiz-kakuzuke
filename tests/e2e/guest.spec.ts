@@ -1,6 +1,7 @@
 import path from "node:path";
 import { expect, test, type Browser, type BrowserContext, type BrowserContextOptions, type Page } from "@playwright/test";
 import { LEAK_CANARY } from "../../src/guest/leak-canary.ts";
+import { VIEW_ONLY_NOTE } from "../../src/guest/view-only-note.ts";
 import { secretFields, secretStrings } from "../../src/question-set/model.ts";
 import { loadQuestionSet } from "../../src/question-set/vite-plugin.ts";
 import { PONG } from "../../src/venue/protocol.ts";
@@ -66,9 +67,10 @@ async function openGuest(page: Page) {
   await joined;
 }
 
-/** タイトル画面が表示され、問題とボタンは表示されていない */
+/** タイトル画面に閲覧専用の案内が表示され、問題とボタンは表示されていない */
 async function expectTitle(page: Page) {
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(set.title);
+  for (const line of VIEW_ONLY_NOTE) await expect(page.getByText(line)).toBeVisible();
   await expect(page.locator(".option-card")).toHaveCount(0);
   await expect(page.getByText(/^STAGE /)).toHaveCount(0);
   await expect(page.getByRole("button")).toHaveCount(0);
