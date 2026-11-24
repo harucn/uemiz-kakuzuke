@@ -38,6 +38,10 @@ const optionCount = "選択肢は 2 個か 3 個にしてください";
 const setSchema = z.object(
   {
     title: text,
+    rules: z.array(text, typed("リスト")).optional(),
+    prizes: z
+      .array(z.object({ rank: text, condition: text, prize: text }, typed("{ rank, condition, prize } の形")), typed("リスト"))
+      .optional(),
     questions: z
       .array(
         z.object(
@@ -105,6 +109,10 @@ function* crossFieldIssues(input: unknown, images: ReadonlyMap<string, ImageUrl>
   const questions = items(at(input, "questions"));
   const secrets = secretsIn(questions);
   yield* leaksIn(at(input, "title"), ["title"], secrets);
+  for (const [i, rule] of items(at(input, "rules")).entries()) yield* leaksIn(rule, ["rules", i], secrets);
+  for (const [i, prize] of items(at(input, "prizes")).entries()) {
+    for (const field of ["rank", "condition", "prize"] as const) yield* leaksIn(at(prize, field), ["prizes", i, field], secrets);
+  }
   for (const [i, q] of questions.entries()) {
     const options = items(at(q, "options"));
 
@@ -209,5 +217,5 @@ function toQuestionSet(input: ValidInput, images: ReadonlyMap<string, ImageUrl>)
       rank: o.rank as Rank,
     })) as unknown as Options,
   }));
-  return { title: input.title, questions } as unknown as QuestionSet;
+  return { title: input.title, rules: input.rules ?? [], prizes: input.prizes ?? [], questions } as unknown as QuestionSet;
 }

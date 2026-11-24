@@ -196,9 +196,9 @@ export function recordTraffic(page: Page) {
   };
 }
 
-/** revealed 以外の状態が、タイトル画面なら {phase}、出題中なら {phase, index} だけを持たないフレームの一覧 */
+/** revealed 以外の状態が、問題の前の画面なら {phase}、出題中なら {phase, index} だけを持たないフレームの一覧 */
 export function viewShapeProblems(frames: readonly string[]): string[] {
-  const allowed: Record<string, string> = { title: "phase", asking: "index,phase" };
+  const allowed: Record<string, string> = { title: "phase", rules: "phase", prizes: "phase", asking: "index,phase" };
   return frames.flatMap((raw) => {
     if (raw === PONG) return [];
     let view: Record<string, unknown>;

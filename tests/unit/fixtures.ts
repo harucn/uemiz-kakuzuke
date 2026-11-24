@@ -6,7 +6,7 @@ export function imageUrl(url: string): ImageUrl {
 }
 
 export function questionSet(title: string, ...questions: readonly [Question, ...Question[]]): QuestionSet {
-  return { title, questions } as QuestionSet;
+  return { title, rules: [], prizes: [], questions } as unknown as QuestionSet;
 }
 
 /** 秘密の文字列はどれも一意で、ほかの項目の部分文字列にならない */

@@ -19,7 +19,9 @@ export function revealView(q: Question): RevealView {
 export function viewOf(state: VenueState, set: QuestionSet): VenueView {
   switch (state.phase) {
     case "title":
-      return { phase: "title" };
+    case "rules":
+    case "prizes":
+      return { phase: state.phase };
     case "asking":
       return { phase: "asking", index: state.index };
     case "revealed":

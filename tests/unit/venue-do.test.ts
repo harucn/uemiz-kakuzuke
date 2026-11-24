@@ -108,6 +108,16 @@ describe("進行状態の保存", () => {
     expect(joinedView(kv)).toMatchObject({ phase: "revealed", index: 1, run: 1 });
   });
 
+  it("ルールとランクと景品がある会場は次へで順に進み、作り直しても同じ画面のまま", () => {
+    const kv = new FakeStorage();
+    const withIntro = { ...venueSet, rules: ["写真を見て当てる"], prizes: [{ rank: "1流", condition: "全問正解", prize: "景品" }] };
+    const host = openVenue(kv, withIntro).connect();
+    host.send(next);
+    expect(joinedView(kv, withIntro)).toEqual({ phase: "rules" });
+    host.send(next);
+    expect(joinedView(kv, withIntro)).toEqual({ phase: "prizes" });
+  });
+
   it("一度も操作していない会場はタイトル画面", () => {
     expect(joinedView(new FakeStorage())).toEqual({ phase: "title" });
   });

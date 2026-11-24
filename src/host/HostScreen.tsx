@@ -1,9 +1,10 @@
 import { useEffect, useRef } from "react";
 import { preload } from "react-dom";
-import { boundsOf, type Position } from "../deck/cursor.ts";
+import { boundsOf, deckOf, type Deck, type Intro, type Position } from "../deck/cursor.ts";
 import type { PublicQuestionSet } from "../question-set/model.ts";
 import { CardSlot, useCardTurn } from "../ui/CardSlot.tsx";
 import { Celebration } from "../ui/Celebration.tsx";
+import { IntroScreen } from "../ui/IntroScreen.tsx";
 import { OptionCard } from "../ui/OptionCard.tsx";
 import { positionOf } from "../venue/machine.ts";
 import type { Intent, VenueView } from "../venue/protocol.ts";
@@ -18,7 +19,7 @@ export function HostScreen({ set }: { readonly set: PublicQuestionSet }) {
   const { view, connection, celebration, operate } = useVenue("host");
   useEffect(() => installHostKeys(window, (intent) => operate?.(intent)), [operate]);
   const position = view === null ? null : positionOf(view);
-  const upcoming = position === null ? null : position === "title" ? 0 : position + 1;
+  const upcoming = position === null ? null : typeof position === "number" ? position + 1 : 0;
   for (const option of upcoming === null ? [] : (set.questions[upcoming]?.options ?? [])) preload(option.image, { as: "image" });
   // 全画面にするのは枠ではなくページ全体。枠の 16:9 の寸法計算をそのまま使えて、画面の比が 16:9 でなくても崩れない
   const stage = useRef<HTMLElement>(null);
@@ -29,14 +30,15 @@ export function HostScreen({ set }: { readonly set: PublicQuestionSet }) {
       <p role="status" className="venue-status">
         {connection === "lost" ? "再接続中" : null}
       </p>
-      {view !== null &&
-        (view.phase === "title" ? (
-          <div className="host host--title">
-            <TitleStage set={set} operate={operate} onFullscreen={onFullscreen} />
-          </div>
-        ) : (
-          <Stage key={view.index} set={set} view={view} celebration={celebration} operate={operate} onFullscreen={onFullscreen} />
-        ))}
+      {view === null ? null : view.phase === "title" ? (
+        <div className="host host--title">
+          <TitleStage set={set} operate={operate} onFullscreen={onFullscreen} />
+        </div>
+      ) : view.phase === "rules" || view.phase === "prizes" ? (
+        <IntroStage set={set} screen={view.phase} operate={operate} onFullscreen={onFullscreen} />
+      ) : (
+        <Stage key={view.index} set={set} view={view} celebration={celebration} operate={operate} onFullscreen={onFullscreen} />
+      )}
     </main>
   );
 }
@@ -61,9 +63,30 @@ function TitleStage({
         <QrCode value={guestUrl} label="参加者画面の QR コード" />
       </div>
       <div className="host-foot host-foot--title">
-        <Controls position="title" total={set.questions.length} operate={operate} onFullscreen={onFullscreen} />
+        <Controls position="title" deck={deckOf(set)} operate={operate} onFullscreen={onFullscreen} />
       </div>
     </>
+  );
+}
+
+function IntroStage({
+  set,
+  screen,
+  operate,
+  onFullscreen,
+}: {
+  readonly set: PublicQuestionSet;
+  readonly screen: Intro;
+  readonly operate: Operate;
+  readonly onFullscreen: () => void;
+}) {
+  return (
+    <div className="host">
+      <IntroScreen set={set} screen={screen} size="host" />
+      <div className="host-foot host-foot--title">
+        <Controls position={screen} deck={deckOf(set)} operate={operate} onFullscreen={onFullscreen} />
+      </div>
+    </div>
   );
 }
 
@@ -75,7 +98,7 @@ function Stage({
   onFullscreen,
 }: {
   readonly set: PublicQuestionSet;
-  readonly view: Exclude<VenueView, { readonly phase: "title" }>;
+  readonly view: Exclude<VenueView, { readonly phase: "title" | Intro }>;
   readonly celebration: string | null;
   readonly operate: Operate;
   readonly onFullscreen: () => void;
@@ -109,7 +132,7 @@ function Stage({
             <Typed key={message.text} text={message.text} />
             <span className="caret" aria-hidden="true" />
           </div>
-          <Controls position={index} total={questions.length} operate={operate} onFullscreen={onFullscreen} />
+          <Controls position={index} deck={deckOf(set)} operate={operate} onFullscreen={onFullscreen} />
         </div>
       </div>
       {/* 16:9 の枠の外に置き、表示中の画面（全画面ならその画面）のてっぺんから降らせる。最後の 1 枚をめくり終えてから降らせる */}
@@ -118,26 +141,26 @@ function Stage({
   );
 }
 
-/** タイトル画面には正解発表ボタンを出さない（状態機械もタイトル画面の正解発表を無視する）。会場につながっていない間は全画面以外を押せない */
+/** 正解発表ボタンは問題の画面にだけ出す（状態機械も問題の前の画面の正解発表を無視する）。会場につながっていない間は全画面以外を押せない */
 function Controls({
   position,
-  total,
+  deck,
   operate,
   onFullscreen,
 }: {
   readonly position: Position;
-  readonly total: number;
+  readonly deck: Deck;
   readonly operate: Operate;
   readonly onFullscreen: () => void;
 }) {
   const fullscreen = useIsFullscreen();
-  const { canPrev, canNext } = boundsOf(position, total);
+  const { canPrev, canNext } = boundsOf(position, deck);
   return (
     <div className="host-btns">
       <button type="button" className="btn px" aria-label="前へ" disabled={operate === null || !canPrev} onClick={() => operate?.({ type: "prev" })}>
         ◀
       </button>
-      {position !== "title" && (
+      {typeof position === "number" && (
         <button type="button" className="btn btn-go px" disabled={operate === null} onClick={() => operate?.({ type: "reveal" })}>
           正解発表
         </button>

@@ -1,20 +1,28 @@
 import { useEffect } from "react";
 import { preload } from "react-dom";
+import { deckOf, type Intro } from "../deck/cursor.ts";
 import type { PublicQuestionSet } from "../question-set/model.ts";
 import { CardSlot, useCardTurn } from "../ui/CardSlot.tsx";
 import { Celebration } from "../ui/Celebration.tsx";
+import { IntroScreen } from "../ui/IntroScreen.tsx";
 import { OptionCard } from "../ui/OptionCard.tsx";
 import type { VenueView } from "../venue/protocol.ts";
 import { useVenue } from "../venue/useVenue.ts";
 import { LEAK_CANARY } from "./leak-canary.ts";
 
-type QuestionPhase = Exclude<VenueView, { readonly phase: "title" }>;
+type QuestionPhase = Exclude<VenueView, { readonly phase: "title" | Intro }>;
+
+/** 届いた画面を手元の問題セットで出せないとき（中身のない画面・問題番号がない）はタイトル画面にする */
+function shownOf(view: VenueView | null, set: PublicQuestionSet): QuestionPhase | Intro | null {
+  if (view === null || view.phase === "title") return null;
+  if (view.phase === "rules" || view.phase === "prizes") return deckOf(set).intro.includes(view.phase) ? view.phase : null;
+  return set.questions[view.index] !== undefined ? view : null;
+}
 
 export function GuestScreen({ set }: { readonly set: PublicQuestionSet }) {
   const { view, connection, celebration } = useVenue("guest");
-  // 届いた問題番号が手元の問題セットにないときもタイトル画面にする
-  const shown: QuestionPhase | null = view !== null && view.phase !== "title" && set.questions[view.index] !== undefined ? view : null;
-  const index = shown?.index ?? null;
+  const shown = shownOf(view, set);
+  const index = shown === null || typeof shown === "string" ? null : shown.index;
   const upcoming = index === null ? 0 : index + 1;
   for (const option of set.questions[upcoming]?.options ?? []) preload(option.image, { as: "image" });
 
@@ -32,6 +40,9 @@ export function GuestScreen({ set }: { readonly set: PublicQuestionSet }) {
         <div className="guest-cover">
           <h1 className="guest-cover__title">{set.title}</h1>
         </div>
+      ) : typeof shown === "string" ? (
+        // 司会画面はルールとランクと景品を 1 画面ずつ出すが、スマホは縦にスクロールできるので両方を並べ、どちらの間も読み返せるようにする
+        deckOf(set).intro.map((screen) => <IntroScreen key={screen} set={set} screen={screen} size="guest" />)
       ) : (
         <QuestionView key={shown.index} set={set} view={shown} celebration={celebration} />
       )}
