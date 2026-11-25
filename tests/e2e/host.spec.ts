@@ -563,13 +563,13 @@ test.describe("正解発表の再演出", () => {
 });
 
 test.describe("紙吹雪の表示範囲と大きさ", () => {
-  test("画面が 16:9 より縦長でも演出は画面のてっぺんから全体に重なる", async ({ page }) => {
+  test("画面が 16:9 より縦長でも演出は画面全体に重なる", async ({ page }) => {
     await page.setViewportSize({ width: 1000, height: 1000 });
     await revealAt(page, PICK);
     expect(await celebration(page).boundingBox()).toEqual({ x: 0, y: 0, width: 1000, height: 1000 });
   });
 
-  test("画面が広いほどハートのドットも大きくなり、画面に対するハートの大きさは変わらない", async ({ page }) => {
+  test("画面が広いほど紙吹雪のドットも大きくなり、画面に対する紙吹雪の大きさは変わらない", async ({ page }) => {
     const dotsAcross = () => celebration(page).evaluate((canvas: HTMLCanvasElement) => canvas.width);
     await page.setViewportSize({ width: 1280, height: 720 });
     await revealAt(page, PICK);

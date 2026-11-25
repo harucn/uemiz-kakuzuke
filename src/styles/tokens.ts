@@ -11,8 +11,10 @@ export const palette = {
   ink: "#1C2A1E",
   /** モックの #6B7A6C はクリーム地で 4.29:1 だったので、4.5:1 を超えるまで暗くした */
   mute: "#677668",
-  /** 正解発表の紙吹雪のハートだけに使う（文字は載せない） */
+  /** 正解発表の紙吹雪だけに使う（文字は載せない） */
   pink: "#F28B8B",
+  /** 正解発表の紙吹雪だけに使う（文字は載せない） */
+  gold: "#E8A317",
 } as const;
 
 export type ColorToken = keyof typeof palette;

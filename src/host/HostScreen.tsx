@@ -135,7 +135,7 @@ function Stage({
           <Controls position={index} deck={deckOf(set)} operate={operate} onFullscreen={onFullscreen} />
         </div>
       </div>
-      {/* 16:9 の枠の外に置き、表示中の画面（全画面ならその画面）のてっぺんから降らせる。最後の 1 枚をめくり終えてから降らせる */}
+      {/* 16:9 の枠の外に置き、表示中の画面（全画面ならその画面）の下の端から打ち上げる。最後の 1 枚をめくり終えてから出す */}
       {celebration !== null && !turning && <Celebration key={celebration} />}
     </>
   );
