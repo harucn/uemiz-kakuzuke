@@ -15,7 +15,6 @@ const images = new Map([
 const table = { label: "A", image: "テーブルワイン.jpg", note: "チリ産の赤ワイン", rank: 2 };
 const bordeaux = { label: "B", image: "ボルドー.jpg", note: "フランス産の赤ワイン", rank: 1 };
 const wine = {
-  mode: "pick",
   title: "ワイン",
   description: "高いワインはどちら？",
   explanation: "B は 1本 5万円のシャトー・マルゴー。A はスーパーで買える赤ワインでした。",
@@ -26,9 +25,8 @@ const a5 = { label: "A", image: "A5.jpg", note: "霜降りの牛肉", rank: 1 };
 const imported = { label: "B", image: "輸入牛.jpg", note: "赤身の牛肉", rank: 3 };
 const domestic = { label: "C", image: "国産牛.jpg", note: "脂の多い牛肉", rank: 2 };
 const beef = {
-  mode: "order",
   title: "牛肉",
-  description: "高い順に並べよ",
+  description: "高い牛肉はどれ？",
   explanation: "A が A5 ランク。",
   options: [a5, imported, domestic],
 };
@@ -52,7 +50,6 @@ describe("問題セットのデータ形式", () => {
         prizes: [],
         questions: [
           {
-            mode: "pick",
             title: "ワイン",
             description: "高いワインはどちら？",
             explanation: "B は 1本 5万円のシャトー・マルゴー。A はスーパーで買える赤ワインでした。",
@@ -62,9 +59,8 @@ describe("問題セットのデータ形式", () => {
             ],
           },
           {
-            mode: "order",
             title: "牛肉",
-            description: "高い順に並べよ",
+            description: "高い牛肉はどれ？",
             explanation: "A が A5 ランク。",
             options: [
               { label: "A", image: "/images/ccc.jpg", note: "霜降りの牛肉", rank: 1 },
@@ -91,12 +87,6 @@ describe("問題セットのデータ形式", () => {
 
   it("問題が 0 件の問題セットは検証に失敗する", () => {
     expect(codesAndPaths(parseQuestionSet({ title, questions: [] }, images))).toStrictEqual([["shape", ["questions"]]]);
-  });
-
-  it("未知の mode は検証に失敗する", () => {
-    const issues = issuesOf(parseQuestionSet({ title, questions: [wine, { ...beef, mode: "guess" }] }, images));
-    expect(issues.map((i) => [i.code, i.path])).toStrictEqual([["shape", ["questions", 1, "mode"]]]);
-    expect(issues[0]!.message).toContain("guess");
   });
 
   it.each([

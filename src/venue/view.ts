@@ -4,13 +4,12 @@ import type { RevealView, VenueView } from "./protocol.ts";
 
 export function revealView(q: Question): RevealView {
   const answer = answerOf(q);
-  const order = answer.mode === "pick" ? [answer.winner] : answer.sequence;
   return {
-    headline: `正解は ${order.join(" → ")}`,
+    headline: `正解は ${answer}`,
     explanation: q.explanation,
     options: q.options.map((o) => ({
       label: o.label,
-      correct: o.label === order[0],
+      correct: o.label === answer,
     })),
   };
 }

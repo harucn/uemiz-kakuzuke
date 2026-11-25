@@ -1,17 +1,15 @@
 # 誤りを 1 つずつ含む: rank の重複・写真の欠落・空の解説
 title: テストの会 格付けチェック
 questions:
-  - mode: order
-    title: 色
-    description: 高い順に並べてください
+  - title: 色
+    description: 高いのはどれ？
     explanation: ""
     options:
       - { label: A, image: 赤.png, note: 水彩絵の具, rank: 1 }
       - { label: B, image: 青.png, note: 油絵の具, rank: 1 }
       - { label: C, image: 緑.png, note: アクリル絵の具, rank: 2 }
 
-  - mode: pick
-    title: 果物
+  - title: 果物
     description: 高いのはどちら？
     explanation: B は季節外れの輸入品でした。
     options:

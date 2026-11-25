@@ -37,7 +37,7 @@ body {
   grid-template-rows: minmax(0, 1fr) auto;
   min-height: 0;
 }
-/* 正解発表: 正解の選択肢は枠とラベルを赤に、pick の不正解はカードごと薄くする */
+/* 正解発表: 正解の選択肢は枠とラベルを赤に、不正解はカードごと薄くする */
 .option-card--correct {
   --c: var(--red);
 }

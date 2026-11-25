@@ -46,7 +46,6 @@ const setSchema = z.object(
       .array(
         z.object(
           {
-            mode: oneOf(["pick", "order"], "mode は pick か order にしてください"),
             title: text,
             description: text,
             explanation: text,
@@ -61,7 +60,7 @@ const setSchema = z.object(
               .min(2, optionCount)
               .max(3, optionCount),
           },
-          typed("{ mode, title, description, explanation, options } の形"),
+          typed("{ title, description, explanation, options } の形"),
         ),
         typed("リスト"),
       )
@@ -206,7 +205,6 @@ function valid<T>(schema: z.ZodType<T>, value: unknown): T | undefined {
 /** 全規則を通った入力だけを受け取る。ブランド型と Rank・Options への絞り込みはここでだけ行う */
 function toQuestionSet(input: ValidInput, images: ReadonlyMap<string, ImageUrl>): QuestionSet {
   const questions = input.questions.map((q) => ({
-    mode: q.mode,
     title: q.title,
     description: q.description,
     explanation: q.explanation,

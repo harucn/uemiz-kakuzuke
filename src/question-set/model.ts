@@ -1,4 +1,3 @@
-export type Mode = "pick" | "order";
 export type Label = "A" | "B" | "C";
 export type Rank = 1 | 2 | 3;
 /** 公開 URL（例 "/images/3f9a2c41.jpg"）。中身のハッシュから作り、元のファイル名を含まない。問題コンパイラ（vite-plugin.ts）だけが作れる */
@@ -17,7 +16,6 @@ export interface Option {
 export type Options = readonly [Option, Option] | readonly [Option, Option, Option];
 
 export interface Question {
-  readonly mode: Mode;
   readonly title: string;
   readonly description: string;
   readonly explanation: string;
@@ -44,7 +42,7 @@ export interface Prize {
 }
 
 export type PublicOption = Pick<Option, "image" | "note">;
-export type PublicQuestion = Pick<Question, "mode" | "title" | "description"> & {
+export type PublicQuestion = Pick<Question, "title" | "description"> & {
   readonly options: readonly [PublicOption, PublicOption] | readonly [PublicOption, PublicOption, PublicOption];
 };
 export type PublicQuestionSet = {
@@ -55,7 +53,7 @@ export type PublicQuestionSet = {
 };
 
 export const PUBLIC_SET_KEYS = ["title", "rules", "prizes", "questions"] as const;
-export const PUBLIC_QUESTION_KEYS = ["mode", "title", "description", "options"] as const;
+export const PUBLIC_QUESTION_KEYS = ["title", "description", "options"] as const;
 export const PUBLIC_OPTION_KEYS = ["image", "note"] as const;
 
 function toPublicOption(o: Option): PublicOption {
@@ -65,7 +63,6 @@ function toPublicOption(o: Option): PublicOption {
 function toPublicQuestion(q: Question): PublicQuestion {
   const o = q.options;
   return {
-    mode: q.mode,
     title: q.title,
     description: q.description,
     options:
@@ -86,18 +83,9 @@ export function toPublic(set: QuestionSet): PublicQuestionSet {
   };
 }
 
-export type Answer =
-  | { readonly mode: "pick"; readonly winner: Label }
-  | { readonly mode: "order"; readonly sequence: readonly Label[] };
-
-export function answerOf(q: Question): Answer {
-  const ranked = [...q.options].sort((a, b) => a.rank - b.rank);
-  switch (q.mode) {
-    case "pick":
-      return { mode: "pick", winner: ranked[0].label };
-    case "order":
-      return { mode: "order", sequence: ranked.map((o) => o.label) };
-  }
+/** 正解は rank 1 の選択肢。rank が 1〜n を 1 回ずつ使うことは parseQuestionSet が保証する */
+export function answerOf(q: Question): Label {
+  return q.options.find((o) => o.rank === 1)!.label;
 }
 
 export type SecretKind = "explanation";

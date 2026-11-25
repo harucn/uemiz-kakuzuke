@@ -25,10 +25,10 @@ const set = loadQuestionSet(path.resolve(import.meta.dirname, "../.."), { conten
 const { questions } = set;
 const secrets = secretStrings(set);
 const last = questions.length - 1;
-const PICK = 0;
-const ORDER = 1;
-if (questions[PICK].mode !== "pick") throw new Error(`フィクスチャの第 ${PICK + 1} 問は pick の前提`);
-if (questions[ORDER].mode !== "order" || questions[ORDER].options.length !== 3) throw new Error(`フィクスチャの第 ${ORDER + 1} 問は 3 択の order の前提`);
+const TWO = 0;
+const THREE = 1;
+if (questions[TWO].options.length !== 2) throw new Error(`フィクスチャの第 ${TWO + 1} 問は 2 択の前提`);
+if (questions[THREE].options.length !== 3) throw new Error(`フィクスチャの第 ${THREE + 1} 問は 3 択の前提`);
 
 const clients: VenueClient[] = [];
 const contexts: BrowserContext[] = [];
@@ -103,7 +103,7 @@ async function expectAsking(page: Page, index: number) {
   await expectNoLabels(page);
 }
 
-/** 第 index + 1 問の正解発表（正解の並び・解説・表示順の各選択肢のラベル・正解の選択肢）が表示されている */
+/** 第 index + 1 問の正解発表（正解ラベル・解説・表示順の各選択肢のラベル・正解の選択肢）が表示されている */
 async function expectRevealed(page: Page, index: number) {
   const view = revealView(questions[index]);
   await expect(page.getByText(`${view.headline}！`)).toBeVisible();
@@ -183,8 +183,8 @@ test.describe("問題画面の表示", () => {
   test("3 択の問題で 3 つの選択肢を表示する", async ({ page, baseURL }) => {
     await operate(await host(baseURL), "next", "next");
     await page.goto("/");
-    await expectQuestion(page, ORDER);
-    for (const [i, o] of questions[ORDER].options.entries()) {
+    await expectQuestion(page, THREE);
+    for (const [i, o] of questions[THREE].options.entries()) {
       await expect(optionPhoto(page, i)).toBeVisible();
       await expect(optionPhoto(page, i)).toHaveAttribute("src", o.image);
       await expect(optionNote(page, i)).toHaveText(o.note);
@@ -193,33 +193,24 @@ test.describe("問題画面の表示", () => {
 });
 
 test.describe("正解発表の表示", () => {
-  test("pick の正解発表で正解情報を表示する", async ({ page, baseURL }) => {
+  test("正解発表で正解情報を表示する", async ({ page, baseURL }) => {
     const venue = await host(baseURL);
     await operate(venue, "next");
     await page.goto("/");
-    await expectAsking(page, PICK);
+    await expectAsking(page, TWO);
     await operate(venue, "reveal");
-    await expectRevealed(page, PICK);
-  });
-
-  test("order の正解発表で順位を表示する", async ({ page, baseURL }) => {
-    const venue = await host(baseURL);
-    await operate(venue, "next", "next");
-    await page.goto("/");
-    await expectAsking(page, ORDER);
-    await operate(venue, "reveal");
-    await expectRevealed(page, ORDER);
+    await expectRevealed(page, TWO);
   });
 
   test("正解発表で選択肢の位置は変わらない", async ({ page, baseURL }) => {
     const venue = await host(baseURL);
     await operate(venue, "next", "next");
     await page.goto("/");
-    await expectAsking(page, ORDER);
+    await expectAsking(page, THREE);
     const before = await photoBoxes(page);
-    expect(before.map((p) => p.src)).toEqual(questions[ORDER].options.map((o) => o.image));
+    expect(before.map((p) => p.src)).toEqual(questions[THREE].options.map((o) => o.image));
     await operate(venue, "reveal");
-    await expectRevealed(page, ORDER);
+    await expectRevealed(page, THREE);
     expect(await photoBoxes(page)).toEqual(before);
   });
 
@@ -228,7 +219,7 @@ test.describe("正解発表の表示", () => {
     await operate(venue, "next");
     await page.goto("/");
     await operate(venue, "reveal");
-    await expectRevealed(page, PICK);
+    await expectRevealed(page, TWO);
     await operate(venue, "next");
     await expectAsking(page, 1);
   });
@@ -239,7 +230,7 @@ test.describe("正解発表の演出", () => {
     const venue = await host(baseURL);
     await operate(venue, "next");
     await page.goto("/");
-    await expectAsking(page, PICK);
+    await expectAsking(page, TWO);
     await operate(venue, "reveal");
     await expect(celebration(page)).toHaveCount(1);
     await expect.poll(() => celebrationHasDots(page)).toBe(true);
@@ -249,7 +240,7 @@ test.describe("正解発表の演出", () => {
     const venue = await host(baseURL);
     await operate(venue, "next");
     await page.goto("/");
-    await expectAsking(page, PICK);
+    await expectAsking(page, TWO);
     await operate(venue, "reveal");
     await expect.poll(() => celebrationHasDots(page)).toBe(true);
     const first = await celebration(page).elementHandle();
@@ -257,13 +248,13 @@ test.describe("正解発表の演出", () => {
     await expect.poll(() => first!.evaluate((el) => el.isConnected)).toBe(false);
     await expect(celebration(page)).toHaveCount(1);
     await expect.poll(() => celebrationHasDots(page)).toBe(true);
-    await expectRevealed(page, PICK);
+    await expectRevealed(page, TWO);
   });
 
   test("正解発表中に開いたときは紙吹雪を再生しない", async ({ page, baseURL }) => {
     await operate(await host(baseURL), "next", "reveal");
     await page.goto("/");
-    await expectRevealed(page, PICK);
+    await expectRevealed(page, TWO);
     await expect(celebration(page)).toHaveCount(0);
   });
 
@@ -272,9 +263,9 @@ test.describe("正解発表の演出", () => {
     const venue = await host(baseURL);
     await operate(venue, "next");
     await page.goto("/");
-    await expectAsking(page, PICK);
+    await expectAsking(page, TWO);
     await operate(venue, "reveal");
-    await expectRevealed(page, PICK);
+    await expectRevealed(page, TWO);
     await expect(celebration(page)).toHaveCount(0);
   });
 });
@@ -382,9 +373,9 @@ test.describe("スマホでの表示", () => {
   test("幅 360px で横スクロールが発生しない", async ({ page, baseURL }) => {
     await operate(await host(baseURL), "next", "next");
     await page.goto("/");
-    await expectQuestion(page, ORDER);
+    await expectQuestion(page, THREE);
     await expectNoHorizontalScroll(page);
-    for (const i of questions[ORDER].options.keys()) {
+    for (const i of questions[THREE].options.keys()) {
       for (const target of [optionPhoto(page, i), optionNote(page, i)]) {
         await target.scrollIntoViewIfNeeded();
         await expect(target).toBeInViewport({ ratio: 1 });
@@ -396,12 +387,12 @@ test.describe("スマホでの表示", () => {
     const venue = await host(baseURL);
     await operate(venue, "next", "next");
     await page.goto("/");
-    await expectQuestion(page, ORDER);
+    await expectQuestion(page, THREE);
     await operate(venue, "reveal");
-    await expectRevealed(page, ORDER);
+    await expectRevealed(page, THREE);
     await expect(celebration(page), "紙吹雪を重ねた状態で測る").toHaveCount(1);
     await expectNoHorizontalScroll(page);
-    const view = revealView(questions[ORDER]);
+    const view = revealView(questions[THREE]);
     for (const i of view.options.keys()) {
       const target = optionCard(page, i).locator(".label-bar");
       await target.scrollIntoViewIfNeeded();
@@ -421,11 +412,11 @@ test.describe("状態の変化を全画面へ届ける", () => {
     const venue = await host(baseURL);
     await operate(venue, "next");
     await page.goto("/");
-    await expectAsking(page, PICK);
+    await expectAsking(page, TWO);
     venue.send({ type: "reveal" });
     // 届いたことは正解の選択肢のカード（めくり始めた裏の面）で測る。正解の見出しはカードをめくり終えてから出る
     await expect(page.locator(".option-card--correct")).toBeAttached({ timeout: 1000 });
-    await expectRevealed(page, PICK);
+    await expectRevealed(page, TWO);
   });
 
   test("前へが参加者画面に届く", async ({ page, baseURL }) => {
