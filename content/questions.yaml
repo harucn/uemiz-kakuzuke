@@ -32,8 +32,8 @@ questions:
     description: A,B,C の中で「富山の地酒」はどれ？
     explanation: //TODO # TODO
     options:
-      - { label: C, image: 国産牛.png, note: 富山の地酒, rank: 2 } # TODO 地酒の名前
-      - { label: A, image: A5和牛.png, note: 白鶴まる, rank: 1 }
+      - { label: C, image: 国産牛.png, note: 富山の地酒, rank: 1 } # TODO 地酒の名前
+      - { label: A, image: A5和牛.png, note: 白鶴まる, rank: 2 }
       - { label: B, image: 輸入牛.png, note: 鬼ころし, rank: 3 }
 
   - mode: pick
@@ -41,6 +41,6 @@ questions:
     description: A,B,C の中で「新婦の子どもの頃の写真」はどれ？
     explanation: //TODO # TODO
     options:
-      - { label: C, image: 国産牛.png, note: 山田, rank: 2 }
-      - { label: A, image: A5和牛.png, note: 田中, rank: 1 }
+      - { label: C, image: 国産牛.png, note: 山田, rank: 1 }
+      - { label: A, image: A5和牛.png, note: 田中, rank: 2 }
       - { label: B, image: 輸入牛.png, note: 川崎, rank: 3 }
