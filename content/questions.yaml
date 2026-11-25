@@ -10,26 +10,37 @@ prizes: # 正解数で決まるランクと景品。ルール画面の次の画�
   - { rank: 3流, condition: 1問以下, prize: 景品を1つ }
 questions:
   - mode: pick
-    title: ワイン
-    description: 高いワインはどちら？
-    explanation: B は 1本 8万円のシャトー・マルゴー。A はスーパーで買える 1本 900円の赤ワインでした。
+    title: リンゴジュース
+    description: A,B,C の中で「となみ野りんご100%ジュース」はどれ？
+    explanation: // TODO
     options:
-      - { label: B, image: ボルドー.jpg, note: フランス産の赤ワイン, rank: 1 }
-      - { label: A, image: テーブルワイン.jpg, note: チリ産の赤ワイン, rank: 2 }
-
-  - mode: order
-    title: 焼肉
-    description: 値段の高い順に並べてください
-    explanation: A は A5 ランクの黒毛和牛、C は国産の交雑牛、B はアメリカ産の牛ロースでした。
-    options:
-      - { label: C, image: 国産牛.png, note: 脂の多い牛肉, rank: 2 }
-      - { label: A, image: A5和牛.png, note: 霜降りの牛肉, rank: 1 }
-      - { label: B, image: 輸入牛.png, note: 赤身の牛肉, rank: 3 }
+      - { label: B, image: ボルドー.jpg, note: となみ野りんご100% ジュース, rank: 1 }
+      - { label: C, image: ボルドー.jpg, note: コンビニの100% ジュース, rank: 2 }
+      - { label: A, image: テーブルワイン.jpg, note: Qoo りんご, rank: 3 }
 
   - mode: pick
     title: チョコレート
-    description: 高いチョコレートはどちら？
-    explanation: A はベルギー産のトリュフで 1粒 600円。B はコンビニのミルクチョコ（1枚 150円）でした。
+    description: A,B,C の中で「クーベルチュールチョコレート」はどれ？
+    explanation: // TODO
     options:
-      - { label: B, image: 板チョコ.jpg, note: 板状のチョコレート, rank: 2 }
-      - { label: A, image: 高級チョコ.jpg, note: 粒のチョコレート, rank: 1 }
+      - { label: B, image: ボルドー.jpg, note: "横井チョコレート\nクーベルチュールチョコレート" , rank: 1 }
+      - { label: C, image: ボルドー.jpg, note: "Lotte\nガーナミルク", rank: 2 }
+      - { label: A, image: テーブルワイン.jpg, note: "100均\n板チョコ", rank: 3 }
+
+  - mode: pick
+    title: 日本酒
+    description: A,B,C の中で「富山の地酒」はどれ？
+    explanation: //TODO # TODO
+    options:
+      - { label: C, image: 国産牛.png, note: 富山の地酒, rank: 1 } # TODO 地酒の名前
+      - { label: A, image: A5和牛.png, note: 白鶴まる, rank: 2 }
+      - { label: B, image: 輸入牛.png, note: 鬼ころし, rank: 3 }
+
+  - mode: pick
+    title: 子どもの頃の写真
+    description: A,B,C の中で「新婦の子どもの頃の写真」はどれ？
+    explanation: //TODO # TODO
+    options:
+      - { label: C, image: 国産牛.png, note: 山田, rank: 1 }
+      - { label: A, image: A5和牛.png, note: 田中, rank: 2 }
+      - { label: B, image: 輸入牛.png, note: 川崎, rank: 3 }

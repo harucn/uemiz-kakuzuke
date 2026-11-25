@@ -465,3 +465,11 @@ body {
 .card-slot--turning {
   animation: flip 0.7s ease-in-out calc(var(--order) * 0.35s) both;
 }
+
+/* 問題ファイルで書いた改行をそのまま出す（YAML の | で書いた説明・選択肢の説明・解説） */
+.msg,
+.option-note,
+.guest-desc,
+.guest-reveal__text {
+  white-space: pre-line;
+}
