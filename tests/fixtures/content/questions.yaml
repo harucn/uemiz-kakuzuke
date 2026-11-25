@@ -1,43 +1,38 @@
-# E2E（tests/e2e/host.spec.ts など）が前提にするデータ。第 1 問は B が rank 1 の pick、第 2 問は A/B/C が 1/3/2 の order
+# E2E（tests/e2e/host.spec.ts など）が前提にするデータ。第 1 問は B が rank 1 の 2 択、第 2 問は A/B/C が 1/3/2 の 3 択
 # 表示順とラベル順が別であることを確かめるため、第 1 問は B・A、第 2 問は C・A・B の順に書く
 title: テストの会 格付けチェック
 questions:
-  - mode: pick
-    title: ワイン
+  - title: ワイン
     description: 高いワインはどちら？
     explanation: B は 1本 6万円の熟成ボルドー。A はスーパーで買える赤ワインでした。
     options:
       - { label: B, image: 右のグラス.png, note: フランス産の赤ワイン, rank: 1 }
       - { label: A, image: 左のグラス.png, note: チリ産の赤ワイン, rank: 2 }
 
-  - mode: order
-    title: 焼肉
-    description: 値段の高い順に並べてください
+  - title: 焼肉
+    description: 値段の高いものはどれ？
     explanation: A は黒毛和牛のサーロイン、C は国産交雑牛のカルビ、B は輸入牛の肩ロースでした。
     options:
       - { label: C, image: 木皿の肉.png, note: 脂の多い牛肉, rank: 2 }
       - { label: A, image: 大皿の肉.png, note: 霜降りの牛肉, rank: 1 }
       - { label: B, image: 小皿の肉.png, note: 赤身の牛肉, rank: 3 }
 
-  - mode: pick
-    title: チョコレート
+  - title: チョコレート
     description: 高いチョコレートはどちら？
     explanation: A はベルギー産のトリュフ。B はコンビニのミルクチョコでした。
     options:
       - { label: A, image: 金色の箱.png, note: 粒のチョコレート, rank: 1 }
       - { label: B, image: 赤色の箱.png, note: 板状のチョコレート, rank: 2 }
 
-  - mode: order
-    title: コーヒー
-    description: 値段の高い順に並べてください
+  - title: コーヒー
+    description: 値段の高いものはどれ？
     explanation: B はゲイシャ種の豆、A は喫茶店のブレンド、C はインスタントでした。
     options:
       - { label: A, image: 白いカップ.png, note: 深煎りのコーヒー, rank: 2 }
       - { label: B, image: 青いカップ.png, note: 浅煎りのコーヒー, rank: 1 }
       - { label: C, image: 紙のカップ.png, note: 粉を溶かすコーヒー, rank: 3 }
 
-  - mode: pick
-    title: お水
+  - title: お水
     description: 高いお水はどちら？
     explanation: B は北欧の氷河から汲んだ水。A は東京の水道水でした。
     options:

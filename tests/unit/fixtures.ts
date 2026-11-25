@@ -13,7 +13,6 @@ export function questionSet(title: string, ...questions: readonly [Question, ...
 export const venueSet = questionSet(
   "テストの会",
   {
-    mode: "pick",
     title: "ワイン",
     description: "高いワインはどちら？",
     explanation: "解説その一",
@@ -23,9 +22,8 @@ export const venueSet = questionSet(
     ],
   },
   {
-    mode: "order",
     title: "牛肉",
-    description: "高い順に並べよ",
+    description: "高い牛肉はどれ？",
     explanation: "解説その二",
     options: [
       { label: "A", image: imageUrl("/images/a2.jpg"), note: "牛肉甲", rank: 1 },
@@ -34,7 +32,6 @@ export const venueSet = questionSet(
     ],
   },
   {
-    mode: "pick",
     title: "チョコ",
     description: "高いチョコはどれ？",
     explanation: "解説その三",

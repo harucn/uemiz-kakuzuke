@@ -1,7 +1,6 @@
 title: 色の会
 questions:
-  - mode: pick
-    title: 色
+  - title: 色
     description: 高いのはどちら？
     explanation: B は顔料が高価でした。
     options:

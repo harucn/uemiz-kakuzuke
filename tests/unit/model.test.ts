@@ -15,7 +15,6 @@ import {
 import { imageUrl, questionSet } from "./fixtures";
 
 const wine: Question = {
-  mode: "pick",
   title: "ワイン",
   description: "高いワインはどちら？",
   explanation: "B は 1本 5万円のボルドー。",
@@ -26,9 +25,8 @@ const wine: Question = {
 };
 
 const beef: Question = {
-  mode: "order",
   title: "牛肉",
-  description: "高い順に並べよ",
+  description: "高い牛肉はどれ？",
   explanation: "A が A5 ランク。",
   options: [
     { label: "A", image: imageUrl("/images/ccc.jpg"), note: "霜降りの牛肉", rank: 1 },
@@ -39,7 +37,6 @@ const beef: Question = {
 
 // 表示順がラベル順と別でも公開形が表示順を保つことを確かめるため、B・A の順に書く
 const water: Question = {
-  mode: "pick",
   title: "水",
   description: "高い水はどちら？",
   explanation: "A は水道水。",
@@ -50,12 +47,9 @@ const water: Question = {
 };
 
 describe("answerOf", () => {
-  it("pick の正解は rank 1 の選択肢になる", () => {
-    expect(answerOf(wine)).toStrictEqual({ mode: "pick", winner: "B" });
-  });
-
-  it("order の正解は rank の昇順のラベル列になる", () => {
-    expect(answerOf(beef)).toStrictEqual({ mode: "order", sequence: ["A", "C", "B"] });
+  it("正解は rank 1 の選択肢になる", () => {
+    expect(answerOf(wine)).toBe("B");
+    expect(answerOf(beef)).toBe("A");
   });
 });
 
@@ -88,7 +82,6 @@ describe("toPublic", () => {
     expect(publicSet.title).toBe("2026 忘年会 格付けチェック");
     expect(publicSet.questions).toStrictEqual([
       {
-        mode: "pick",
         title: "ワイン",
         description: "高いワインはどちら？",
         options: [
@@ -97,9 +90,8 @@ describe("toPublic", () => {
         ],
       },
       {
-        mode: "order",
         title: "牛肉",
-        description: "高い順に並べよ",
+        description: "高い牛肉はどれ？",
         options: [
           { image: "/images/ccc.jpg", note: "霜降りの牛肉" },
           { image: "/images/ddd.jpg", note: "赤身の牛肉" },
@@ -107,7 +99,6 @@ describe("toPublic", () => {
         ],
       },
       {
-        mode: "pick",
         title: "水",
         description: "高い水はどちら？",
         options: [

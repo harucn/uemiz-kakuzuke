@@ -9,8 +9,7 @@ prizes: # 正解数で決まるランクと景品。ルール画面の次の画�
   - { rank: 普通, condition: 3-2問正解, prize: 景品を2つ }
   - { rank: 3流, condition: 1問以下, prize: 景品を1つ }
 questions:
-  - mode: pick
-    title: リンゴジュース
+  - title: リンゴジュース
     description: A,B,C の中で「となみ野りんご100%ジュース」はどれ？
     explanation: // TODO
     options:
@@ -18,8 +17,7 @@ questions:
       - { label: C, image: ボルドー.jpg, note: コンビニの100% ジュース, rank: 2 }
       - { label: A, image: テーブルワイン.jpg, note: Qoo りんご, rank: 3 }
 
-  - mode: pick
-    title: チョコレート
+  - title: チョコレート
     description: A,B,C の中で「クーベルチュールチョコレート」はどれ？
     explanation: // TODO
     options:
@@ -27,8 +25,7 @@ questions:
       - { label: C, image: ボルドー.jpg, note: "Lotte\nガーナミルク", rank: 2 }
       - { label: A, image: テーブルワイン.jpg, note: "100均\n板チョコ", rank: 3 }
 
-  - mode: pick
-    title: 日本酒
+  - title: 日本酒
     description: A,B,C の中で「富山の地酒」はどれ？
     explanation: //TODO # TODO
     options:
@@ -36,8 +33,7 @@ questions:
       - { label: A, image: A5和牛.png, note: 白鶴まる, rank: 2 }
       - { label: B, image: 輸入牛.png, note: 鬼ころし, rank: 3 }
 
-  - mode: pick
-    title: 子どもの頃の写真
+  - title: 子どもの頃の写真
     description: A,B,C の中で「新婦の子どもの頃の写真」はどれ？
     explanation: //TODO # TODO
     options:

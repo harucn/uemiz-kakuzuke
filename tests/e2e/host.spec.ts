@@ -2,7 +2,7 @@ import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import jsQR from "jsqr";
 import { PNG } from "pngjs";
-import { answerOf, secretStrings, type Answer, type Label } from "../../src/question-set/model.ts";
+import { answerOf, secretStrings, type Label } from "../../src/question-set/model.ts";
 import { loadQuestionSet } from "../../src/question-set/vite-plugin.ts";
 import { revealView } from "../../src/venue/view.ts";
 import { expectNoLabels, expectOptions, labelTraces, optionCard, photoBoxes, settleCards } from "./options.ts";
@@ -30,15 +30,10 @@ const qrCode = (page: Page) => page.getByRole("img", { name: "参加者画面の
 const guestUrl = (page: Page) => new URL("/", page.url()).href;
 const celebration = (page: Page) => page.getByTestId("celebration");
 const status = (page: Page) => page.getByRole("status");
-const PICK = 0;
-const ORDER = 1;
-
-/** フィクスチャの前提（第 1 問は pick、第 2 問は 3 択の order）が崩れたら全体を止める */
-function answerAt<M extends "pick" | "order">(index: number, mode: M) {
-  const answer = answerOf(questions[index]);
-  if (answer.mode !== mode) throw new Error(`フィクスチャの第 ${index + 1} 問は ${mode} の前提`);
-  return answer as Extract<Answer, { mode: M }>;
-}
+const TWO = 0;
+const THREE = 1;
+if (questions[TWO].options.length !== 2) throw new Error(`フィクスチャの第 ${TWO + 1} 問は 2 択の前提`);
+if (questions[THREE].options.length !== 3) throw new Error(`フィクスチャの第 ${THREE + 1} 問は 3 択の前提`);
 
 /** 第 index + 1 問の問題名・説明・全選択肢（表示順の写真と選択肢の説明）・番号が表示されている */
 async function expectQuestion(page: Page, index: number) {
@@ -223,9 +218,9 @@ test.describe("会場の進行状態を表示する", () => {
   });
 
   test("正解発表後に再読み込みすると正解発表を表示する", async ({ page }) => {
-    await revealAt(page, ORDER);
+    await revealAt(page, THREE);
     await page.reload();
-    await expectRevealed(page, ORDER);
+    await expectRevealed(page, THREE);
   });
 
   test("新しいタブで開くと会場の今の状態を表示する", async ({ page, context }) => {
@@ -248,11 +243,11 @@ test.describe("会場の進行状態を表示する", () => {
 
 test.describe("つないだ直後は演出を再生しない", () => {
   test("正解発表中に再読み込みしても演出を再生しない", async ({ page }) => {
-    await revealAt(page, ORDER);
+    await revealAt(page, THREE);
     // 陽性対照: 操作した直後は同じ検査が演出を見つける
     await expect(celebration(page)).toHaveCount(1);
     await page.reload();
-    await expectRevealed(page, ORDER);
+    await expectRevealed(page, THREE);
     await expect(celebration(page)).toHaveCount(0);
   });
 });
@@ -399,7 +394,7 @@ test.describe("キーボード操作", () => {
     test(`${key} キーで正解発表する`, async ({ page }) => {
       await openHost(page);
       await page.keyboard.press(key);
-      // 第 1 問は B が rank 1 の pick（フィクスチャの前提）
+      // 第 1 問は B が rank 1（フィクスチャの前提）
       await expect(page.getByText("正解は B")).toBeVisible();
       await expect(page.getByText(questions[0].explanation)).toBeVisible();
     });
@@ -424,16 +419,15 @@ async function expectCorrectOnlyOn(page: Page, winner: Label) {
   await expect(page.locator(".host-opts")).not.toContainText("正解");
 }
 
-/** 第 index + 1 問の正解発表（正解の並び・解説・全選択肢のラベル・正解の選択肢）が表示されている */
+/** 第 index + 1 問の正解発表（正解ラベル・解説・全選択肢のラベル・正解の選択肢）が表示されている */
 async function expectRevealed(page: Page, index: number) {
   const answer = answerOf(questions[index]);
-  const order = answer.mode === "pick" ? [answer.winner] : answer.sequence;
-  await expect(page.getByText(`正解は ${order.join(" → ")}`)).toBeVisible();
+  await expect(page.getByText(`正解は ${answer}`)).toBeVisible();
   await expect(page.getByText(questions[index].explanation)).toBeVisible();
   for (const o of questions[index].options) {
     await expect(card(page, o.label).locator(".label-bar")).toHaveText(o.label);
   }
-  await expectCorrectOnlyOn(page, order[0]);
+  await expectCorrectOnlyOn(page, answer);
 }
 
 /** 紙吹雪の canvas に色の付いたドットがある */
@@ -453,16 +447,21 @@ async function expectLabelsInDisplayOrder(page: Page, index: number, expected: r
   }
 }
 
-test.describe("pick の正解発表", () => {
-  const q = questions[PICK];
-  const { winner } = answerAt(PICK, "pick");
+test.describe("正解発表", () => {
+  const q = questions[TWO];
+  const winner = answerOf(q);
 
-  test("pick の正解発表で各選択肢にラベルを表示する", async ({ page }) => {
-    await revealAt(page, PICK);
-    await expectLabelsInDisplayOrder(page, PICK, ["B", "A"]);
+  test("正解発表で各選択肢にラベルを表示する", async ({ page }) => {
+    await revealAt(page, TWO);
+    await expectLabelsInDisplayOrder(page, TWO, ["B", "A"]);
   });
 
-  test("pick の正解発表で選択肢の位置は変わらない", async ({ page }) => {
+  test("3 択の正解発表で各選択肢にラベルを表示する", async ({ page }) => {
+    await revealAt(page, THREE);
+    await expectLabelsInDisplayOrder(page, THREE, ["C", "A", "B"]);
+  });
+
+  test("正解発表で選択肢の位置は変わらない", async ({ page }) => {
     await openHost(page);
     const before = await photoBoxes(page);
     expect(before.map((p) => p.src)).toEqual(q.options.map((o) => o.image));
@@ -472,37 +471,19 @@ test.describe("pick の正解発表", () => {
     expect(await photoBoxes(page)).toEqual(before);
   });
 
-  test("pick で正解の選択肢だけを正解の見た目にする", async ({ page }) => {
-    await revealAt(page, PICK);
+  test("正解の選択肢だけを正解の見た目にする", async ({ page }) => {
+    await revealAt(page, TWO);
     await expectCorrectOnlyOn(page, winner);
   });
 
+  test("3 択で正解の選択肢だけを正解の見た目にする", async ({ page }) => {
+    await revealAt(page, THREE);
+    await expectCorrectOnlyOn(page, answerOf(questions[THREE]));
+  });
 
-  test("pick の正解発表で正解ラベルと解説を表示する", async ({ page }) => {
-    await revealAt(page, PICK);
+  test("正解発表で正解ラベルと解説を表示する", async ({ page }) => {
+    await revealAt(page, TWO);
     await expect(page.getByText(`正解は ${winner}`)).toBeVisible();
-    await expect(page.getByText(q.explanation)).toBeVisible();
-  });
-});
-
-test.describe("order の正解発表", () => {
-  const q = questions[ORDER];
-  const { sequence } = answerAt(ORDER, "order");
-
-  test("order の正解発表で各選択肢にラベルを表示する", async ({ page }) => {
-    await revealAt(page, ORDER);
-    await expectLabelsInDisplayOrder(page, ORDER, ["C", "A", "B"]);
-  });
-
-
-  test("order の正解発表で 1 位の選択肢だけを正解の見た目にする", async ({ page }) => {
-    await revealAt(page, ORDER);
-    await expectCorrectOnlyOn(page, sequence[0]);
-  });
-
-  test("order の正解発表で正解の並びと解説を表示する", async ({ page }) => {
-    await revealAt(page, ORDER);
-    await expect(page.getByText(`正解は ${sequence.join(" → ")}`)).toBeVisible();
     await expect(page.getByText(q.explanation)).toBeVisible();
   });
 });
@@ -525,7 +506,7 @@ test("正解発表の各カードのラベルは同じ位置の写真のラベ�
 
 test.describe("正解発表の再演出", () => {
   test("正解発表をもう一度押すと演出を再生する", async ({ page }) => {
-    await revealAt(page, PICK);
+    await revealAt(page, TWO);
     await expect.poll(() => celebrationHasDots(page)).toBe(true);
     const first = await celebration(page).elementHandle();
     await revealButton(page).click();
@@ -535,7 +516,7 @@ test.describe("正解発表の再演出", () => {
   });
 
   test("正解発表をもう一度押しても正解情報は変わらない", async ({ page }) => {
-    await revealAt(page, ORDER);
+    await revealAt(page, THREE);
     const shown = () =>
       Promise.all([
         page.locator(".host-opts").innerText(),
@@ -544,7 +525,7 @@ test.describe("正解発表の再演出", () => {
         correctCard(page).getAttribute("data-label"),
       ]);
     const before = await shown();
-    expect(before[2], "1 回目の正解発表後のラベル").toEqual(questions[ORDER].options.map((o) => [o.label, o.label]));
+    expect(before[2], "1 回目の正解発表後のラベル").toEqual(questions[THREE].options.map((o) => [o.label, o.label]));
     const firstCelebration = await celebration(page).elementHandle();
     await revealButton(page).click();
     await expect.poll(() => firstCelebration!.evaluate((el) => el.isConnected)).toBe(false);
@@ -554,8 +535,8 @@ test.describe("正解発表の再演出", () => {
 
   test("reduced motion が有効なときは演出を再生しない", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await revealAt(page, PICK);
-    const q = questions[PICK];
+    await revealAt(page, TWO);
+    const q = questions[TWO];
     await expect(page.getByText(q.explanation)).toBeVisible();
     for (const o of q.options) await expect(card(page, o.label).locator(".label-bar")).toHaveText(o.label);
     await expect(celebration(page)).toHaveCount(0);
@@ -565,14 +546,14 @@ test.describe("正解発表の再演出", () => {
 test.describe("紙吹雪の表示範囲と大きさ", () => {
   test("画面が 16:9 より縦長でも演出は画面全体に重なる", async ({ page }) => {
     await page.setViewportSize({ width: 1000, height: 1000 });
-    await revealAt(page, PICK);
+    await revealAt(page, TWO);
     expect(await celebration(page).boundingBox()).toEqual({ x: 0, y: 0, width: 1000, height: 1000 });
   });
 
   test("画面が広いほど紙吹雪のドットも大きくなり、画面に対する紙吹雪の大きさは変わらない", async ({ page }) => {
     const dotsAcross = () => celebration(page).evaluate((canvas: HTMLCanvasElement) => canvas.width);
     await page.setViewportSize({ width: 1280, height: 720 });
-    await revealAt(page, PICK);
+    await revealAt(page, TWO);
     const narrow = await dotsAcross();
     // 演出は作り直したときに canvas の寸法を測るので、広げてからもう一度正解発表を押す
     await page.setViewportSize({ width: 2560, height: 1440 });
@@ -588,7 +569,7 @@ test.describe("正解発表でカードをめくる", () => {
 
   test("問題が出たときはめくらず、正解発表でめくって答えの面を出す", async ({ page }) => {
     await openHost(page);
-    await goTo(page, ORDER);
+    await goTo(page, THREE);
     expect(await slotAnimations(page)).toEqual(["none", "none", "none"]);
     const slot = await page.locator(".card-slot").first().elementHandle();
     await revealButton(page).click();
@@ -600,7 +581,7 @@ test.describe("正解発表でカードをめくる", () => {
 
   test("左から順にめくる", async ({ page }) => {
     await openHost(page);
-    await goTo(page, ORDER);
+    await goTo(page, THREE);
     await revealButton(page).click();
     await expect.poll(() => slotAnimations(page)).toEqual(["flip", "flip", "flip"]);
     const delays = await page.locator(".card-slot").evaluateAll((slots) => slots.map((el) => parseFloat(getComputedStyle(el).animationDelay)));
@@ -610,11 +591,11 @@ test.describe("正解発表でカードをめくる", () => {
 
   test("最後の 1 枚をめくり終えてから正解のメッセージと紙吹雪を出す", async ({ page }) => {
     await openHost(page);
-    await goTo(page, ORDER);
-    const { headline } = revealView(questions[ORDER]);
+    await goTo(page, THREE);
+    const { headline } = revealView(questions[THREE]);
     await revealButton(page).click();
     await expect.poll(() => slotAnimations(page)).toEqual(["flip", "flip", "flip"]);
-    await expect(page.locator(".msg")).toContainText(questions[ORDER].description);
+    await expect(page.locator(".msg")).toContainText(questions[THREE].description);
     await expect(celebration(page)).toHaveCount(0);
     await expect.poll(() => slotAnimations(page)).toEqual(["none", "none", "none"]);
     await expect(page.locator(".msg")).toContainText(`${headline}！`);
@@ -622,7 +603,7 @@ test.describe("正解発表でカードをめくる", () => {
   });
 
   test("正解発表中に開いたときはめくらない", async ({ page }) => {
-    await revealAt(page, PICK);
+    await revealAt(page, TWO);
     await page.reload();
     await expect(correctCard(page)).toBeVisible();
     expect(await slotAnimations(page)).toEqual(["none", "none"]);
