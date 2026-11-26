@@ -1,4 +1,5 @@
 import { expect, type Page } from "@playwright/test";
+import type { Question } from "../../src/question-set/model.ts";
 
 /** 選択肢の n 番目（表示順） */
 export const optionCard = (page: Page, index: number) => page.locator(".option-card").nth(index);
@@ -18,12 +19,23 @@ export async function expectNoLabels(page: Page) {
   expect(await labelTraces(page), "画面に置かれたラベル").toEqual([]);
 }
 
-/** 選択肢が問題データの表示順に写真と選択肢の説明つきで表示され、写真が読み込み済み */
-export async function expectOptions(page: Page, options: readonly { readonly image: string; readonly note: string }[]) {
+/** 正解発表前のラベル: 写真当て以外は何も置かない。写真当ては表示順の各写真の左上に、問題データのとおりのラベルだけを出す */
+export async function expectLabelsBeforeReveal(page: Page, q: Pick<Question, "mode" | "options">) {
+  if (q.mode === "price") return expectNoLabels(page);
+  await expect(page.locator(".label-bar")).toHaveCount(0);
+  for (const [i, o] of q.options.entries()) {
+    await expect(optionCard(page, i).locator(".label-chip")).toHaveText(o.label);
+    await expect(optionCard(page, i)).toHaveAttribute("data-label", o.label);
+  }
+}
+
+/** 選択肢が問題データの表示順に写真と選択肢の説明つきで表示され、写真が読み込み済み。説明のない選択肢（写真当て）は写真の下に何も出ない */
+export async function expectOptions(page: Page, options: readonly { readonly image: string; readonly note: string | null }[]) {
   await expect(page.locator(".option-card")).toHaveCount(options.length);
   for (const [i, o] of options.entries()) {
     await expect(optionPhoto(page, i)).toHaveAttribute("src", o.image);
-    await expect(optionNote(page, i)).toHaveText(o.note);
+    if (o.note === null) await expect(optionNote(page, i)).toHaveCount(0);
+    else await expect(optionNote(page, i)).toHaveText(o.note);
     await expect.poll(() => optionPhoto(page, i).evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth)).toBeGreaterThan(0);
   }
 }

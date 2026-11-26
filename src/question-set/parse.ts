@@ -9,7 +9,7 @@ import {
   type SecretKind,
 } from "./model.ts";
 
-export type IssueCode = "shape" | "rank-permutation" | "label-permutation" | "image-missing" | "public-text-leak";
+export type IssueCode = "shape" | "note-in-photo" | "rank-permutation" | "label-permutation" | "image-missing" | "public-text-leak";
 export interface Issue {
   readonly code: IssueCode;
   readonly path: readonly (string | number)[];
@@ -46,13 +46,14 @@ const setSchema = z.object(
       .array(
         z.object(
           {
+            mode: oneOf(["photo"], "mode は photo だけ書けます（書かなければ一番高いものを当てる問題）").optional(),
             title: text,
             description: text,
             explanation: text,
             options: z
               .array(
                 z.object(
-                  { label, image: text, note: text, rank },
+                  { label, image: text, note: text.optional(), rank },
                   typed("{ label, image, note, rank } の形"),
                 ),
                 typed("リスト"),
@@ -60,7 +61,7 @@ const setSchema = z.object(
               .min(2, optionCount)
               .max(3, optionCount),
           },
-          typed("{ title, description, explanation, options } の形"),
+          typed("{ mode, title, description, explanation, options } の形"),
         ),
         typed("リスト"),
       )
@@ -124,6 +125,14 @@ function* crossFieldIssues(input: unknown, images: ReadonlyMap<string, ImageUrl>
           message: `写真 ${file} が画像フォルダにありません`,
         };
       }
+    }
+
+    const photo = at(q, "mode") === "photo";
+    for (const [j, o] of options.entries()) {
+      const hasNote = at(o, "note") !== undefined;
+      const path = ["questions", i, "options", j, "note"];
+      if (photo && hasNote) yield { code: "note-in-photo", path, message: "写真当ての問題（mode: photo）には note を書けません" };
+      if (!photo && !hasNote) yield { code: "shape", path, message: "必須の項目です" };
     }
 
     const counted = options.length >= 2 && options.length <= 3;
@@ -205,13 +214,14 @@ function valid<T>(schema: z.ZodType<T>, value: unknown): T | undefined {
 /** 全規則を通った入力だけを受け取る。ブランド型と Rank・Options への絞り込みはここでだけ行う */
 function toQuestionSet(input: ValidInput, images: ReadonlyMap<string, ImageUrl>): QuestionSet {
   const questions = input.questions.map((q) => ({
+    mode: q.mode ?? "price",
     title: q.title,
     description: q.description,
     explanation: q.explanation,
     options: q.options.map((o) => ({
       label: o.label,
       image: images.get(o.image)!,
-      note: o.note,
+      note: o.note ?? null,
       rank: o.rank as Rank,
     })) as unknown as Options,
   }));

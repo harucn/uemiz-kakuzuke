@@ -5,6 +5,7 @@ import type { Question } from "../../src/question-set/model.ts";
 import { imageUrl } from "./fixtures.ts";
 
 const wine: Question = {
+  mode: "price",
   title: "ワイン",
   description: "高いワインはどちら？",
   explanation: "B は 1本 5万円のボルドー。",
@@ -15,6 +16,7 @@ const wine: Question = {
 };
 
 const beef: Question = {
+  mode: "price",
   title: "牛肉",
   description: "高い牛肉はどれ？",
   explanation: "A が A5 ランク。",

@@ -13,6 +13,7 @@ export function questionSet(title: string, ...questions: readonly [Question, ...
 export const venueSet = questionSet(
   "テストの会",
   {
+    mode: "price",
     title: "ワイン",
     description: "高いワインはどちら？",
     explanation: "解説その一",
@@ -22,6 +23,7 @@ export const venueSet = questionSet(
     ],
   },
   {
+    mode: "price",
     title: "牛肉",
     description: "高い牛肉はどれ？",
     explanation: "解説その二",
@@ -32,6 +34,7 @@ export const venueSet = questionSet(
     ],
   },
   {
+    mode: "price",
     title: "チョコ",
     description: "高いチョコはどれ？",
     explanation: "解説その三",

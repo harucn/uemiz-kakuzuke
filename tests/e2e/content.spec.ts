@@ -9,7 +9,7 @@ import { revealView } from "../../src/venue/view.ts";
 import { secretStrings, type Label } from "../../src/question-set/model.ts";
 import { loadQuestionSet } from "../../src/question-set/vite-plugin.ts";
 import { findSecrets } from "../leak.ts";
-import { expectNoLabels, expectOptions, optionCard, photoBoxes, settleCards } from "./options.ts";
+import { expectLabelsBeforeReveal, expectOptions, optionCard, photoBoxes, settleCards } from "./options.ts";
 import { connectHost, freshVenue, operate, recordTraffic, skipIfRemote, TEXT_TYPE, viewShapeProblems } from "./venue.ts";
 
 test.beforeEach(freshVenue);
@@ -208,7 +208,7 @@ test.describe("司会画面", () => {
         await expectQuestion(page, i);
         expect(await overflows(page, "question"), `第 ${i + 1} 問の正解発表前`).toEqual([]);
         expect(await smallPhotos(page), `第 ${i + 1} 問の正解発表前`).toEqual([]);
-        await expectNoLabels(page);
+        await expectLabelsBeforeReveal(page, questions[i]);
         const asking = await photoBoxes(page);
         await driver.reveal(page);
         await expectRevealed(page, i);

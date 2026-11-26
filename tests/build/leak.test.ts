@@ -132,12 +132,13 @@ describe("参加者に届くデータに正解情報を含めない", () => {
 
     expect(data).toStrictEqual(toPublic(set));
     expect(Object.keys(data).sort()).toEqual([...PUBLIC_SET_KEYS].sort());
-    for (const question of data.questions) {
+    for (const [i, question] of data.questions.entries()) {
       expect(Object.keys(question).sort()).toEqual([...PUBLIC_QUESTION_KEYS].sort());
       for (const option of question.options) {
         expect(Object.keys(option).sort()).toEqual([...PUBLIC_OPTION_KEYS].sort());
         expect(option).not.toHaveProperty("rank");
-        expect(option.note).toEqual(expect.stringMatching(/\S/));
+        if (set.questions[i].mode === "price") expect(option.note).toEqual(expect.stringMatching(/\S/));
+        else expect(option.note).toBeNull();
       }
     }
   });
@@ -147,6 +148,14 @@ describe("参加者に届くデータに正解情報を含めない", () => {
     expect(data.questions.length).toBeGreaterThan(0);
     for (const question of data.questions) {
       for (const option of question.options) expect(option).not.toHaveProperty("label");
+    }
+  });
+
+  it("参加者に届くデータで、写真当て以外の問題はラベルを持たない", async () => {
+    const data = await publicData();
+    for (const [i, question] of data.questions.entries()) {
+      if (set.questions[i].mode === "price") expect(question.labels, `第 ${i + 1} 問`).toBeNull();
+      else expect(question.labels).toEqual(set.questions[i].options.map((o) => o.label));
     }
   });
 });

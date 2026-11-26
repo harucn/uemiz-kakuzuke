@@ -122,7 +122,7 @@ function Stage({
         <div className="host-opts">
           {question.options.map((o, i) => (
             <CardSlot key={i} face={reveal === null ? "asking" : "revealed"} order={i} onTurned={i === last ? onTurned : undefined}>
-              <OptionCard size="host" option={o} revealed={reveal?.options[i]} />
+              <OptionCard size="host" option={o} revealed={reveal?.options[i]} label={question.labels?.[i]} />
             </CardSlot>
           ))}
         </div>

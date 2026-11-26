@@ -1,4 +1,5 @@
 # E2E（tests/e2e/host.spec.ts など）が前提にするデータ。第 1 問は B が rank 1 の 2 択、第 2 問は A/B/C が 1/3/2 の 3 択
+# 最終問は写真当て（mode: photo）
 # 表示順とラベル順が別であることを確かめるため、第 1 問は B・A、第 2 問は C・A・B の順に書く
 title: テストの会 格付けチェック
 questions:
@@ -38,3 +39,12 @@ questions:
     options:
       - { label: A, image: 透明な瓶.png, note: 国内の水, rank: 2 }
       - { label: B, image: 緑色の瓶.png, note: 海外の水, rank: 1 }
+
+  - mode: photo
+    title: 子どもの頃の写真
+    description: 新婦の子どもの頃の写真はどれ？
+    explanation: B が新婦でした。
+    options:
+      - { label: C, image: 紙のカップ.png, rank: 3 }
+      - { label: A, image: 白いカップ.png, rank: 2 }
+      - { label: B, image: 青いカップ.png, rank: 1 }

@@ -90,6 +90,21 @@ body {
   color: var(--paper);
   background: var(--c, var(--green));
 }
+/* 写真当ての問題で、正解発表前から写真の左上に出すラベル。写真の中央（顔など）を隠さない */
+.label-chip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  min-width: 1.3em;
+  padding: 0 0.15em;
+  font-family: var(--label);
+  font-weight: 700;
+  font-size: 5cqw;
+  text-align: center;
+  line-height: 1.2;
+  color: var(--paper);
+  background: var(--green);
+}
 
 .option-note {
   margin: 0;
