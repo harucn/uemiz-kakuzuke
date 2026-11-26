@@ -33,11 +33,11 @@ questions:
       - { label: A, image: A5和牛.png, note: 白鶴まる, rank: 2 }
       - { label: B, image: 輸入牛.png, note: 鬼ころし, rank: 3 }
 
-  - mode: photo # 写真当て: A・B・C を発表前から出し、note は書かない
+  - mode: photo # 写真当て: A・B・C を発表前から出す。note は書かず、caption（誰の写真か）を正解発表後に出す
     title: 子どもの頃の写真
     description: A,B,C の中で「新婦の子どもの頃の写真」はどれ？
     explanation: //TODO # TODO
     options:
-      - { label: C, image: 国産牛.png, rank: 1 }
-      - { label: A, image: A5和牛.png, rank: 2 }
-      - { label: B, image: 輸入牛.png, rank: 3 }
+      - { label: C, image: 国産牛.png, caption: 新婦, rank: 1 }
+      - { label: A, image: A5和牛.png, caption: TODO, rank: 2 }
+      - { label: B, image: 輸入牛.png, caption: TODO, rank: 3 }

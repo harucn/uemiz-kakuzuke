@@ -9,7 +9,7 @@ import { revealView } from "../../src/venue/view.ts";
 import { secretStrings, type Label } from "../../src/question-set/model.ts";
 import { loadQuestionSet } from "../../src/question-set/vite-plugin.ts";
 import { findSecrets } from "../leak.ts";
-import { expectLabelsBeforeReveal, expectOptions, optionCard, photoBoxes, settleCards } from "./options.ts";
+import { expectLabelsBeforeReveal, expectOptions, expectRevealedOption, optionCard, photoBoxes, settleCards } from "./options.ts";
 import { connectHost, freshVenue, operate, recordTraffic, skipIfRemote, TEXT_TYPE, viewShapeProblems } from "./venue.ts";
 
 test.beforeEach(freshVenue);
@@ -164,7 +164,7 @@ async function expectRevealed(page: Page, index: number) {
   await expect(page.locator(".host-opts")).not.toContainText("正解");
   for (const [i, o] of view.options.entries()) {
     await expect(optionCard(page, i)).toHaveAttribute("data-label", o.label);
-    await expect(card(page, o.label).locator(".label-bar")).toHaveText(o.label);
+    await expectRevealedOption(page, i, questions[index], o);
     if (o.correct) await expect(card(page, o.label)).toHaveClass(/option-card--correct/);
   }
 }

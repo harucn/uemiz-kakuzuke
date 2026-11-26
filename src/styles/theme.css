@@ -103,7 +103,25 @@ body {
   text-align: center;
   line-height: 1.2;
   color: var(--paper);
-  background: var(--green);
+  background: var(--c, var(--green));
+}
+
+/* 写真当ての問題で、正解発表後に写真の下に出す誰の写真か。発表前も同じ 1 行ぶんの高さに固定し、写真の座標と大きさを変えない */
+.option-caption {
+  height: 1.4em;
+  margin: 0;
+  overflow: hidden;
+  color: var(--ink);
+  text-align: center;
+  line-height: 1.4;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.option-card--host .option-caption {
+  font-size: 1.8cqw;
+}
+.option-card--guest .option-caption {
+  font-size: 15px;
 }
 
 .option-note {

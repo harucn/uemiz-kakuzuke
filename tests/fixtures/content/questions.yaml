@@ -45,6 +45,6 @@ questions:
     description: 新婦の子どもの頃の写真はどれ？
     explanation: B が新婦でした。
     options:
-      - { label: C, image: 紙のカップ.png, rank: 3 }
-      - { label: A, image: 白いカップ.png, rank: 2 }
-      - { label: B, image: 青いカップ.png, rank: 1 }
+      - { label: C, image: 紙のカップ.png, caption: 新郎, rank: 3 }
+      - { label: A, image: 白いカップ.png, caption: 新婦の姉, rank: 2 }
+      - { label: B, image: 青いカップ.png, caption: 新婦, rank: 1 }

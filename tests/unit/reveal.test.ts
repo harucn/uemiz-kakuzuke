@@ -10,8 +10,8 @@ const wine: Question = {
   description: "高いワインはどちら？",
   explanation: "B は 1本 5万円のボルドー。",
   options: [
-    { label: "A", image: imageUrl("/images/aaa.jpg"), note: "チリ産の赤ワイン", rank: 2 },
-    { label: "B", image: imageUrl("/images/bbb.jpg"), note: "フランス産の赤ワイン", rank: 1 },
+    { label: "A", image: imageUrl("/images/aaa.jpg"), note: "チリ産の赤ワイン", caption: null, rank: 2 },
+    { label: "B", image: imageUrl("/images/bbb.jpg"), note: "フランス産の赤ワイン", caption: null, rank: 1 },
   ],
 };
 
@@ -21,9 +21,9 @@ const beef: Question = {
   description: "高い牛肉はどれ？",
   explanation: "A が A5 ランク。",
   options: [
-    { label: "A", image: imageUrl("/images/ccc.jpg"), note: "霜降りの牛肉", rank: 1 },
-    { label: "B", image: imageUrl("/images/ddd.jpg"), note: "赤身の牛肉", rank: 3 },
-    { label: "C", image: imageUrl("/images/eee.jpg"), note: "脂の多い牛肉", rank: 2 },
+    { label: "A", image: imageUrl("/images/ccc.jpg"), note: "霜降りの牛肉", caption: null, rank: 1 },
+    { label: "B", image: imageUrl("/images/ddd.jpg"), note: "赤身の牛肉", caption: null, rank: 3 },
+    { label: "C", image: imageUrl("/images/eee.jpg"), note: "脂の多い牛肉", caption: null, rank: 2 },
   ],
 };
 
@@ -52,6 +52,25 @@ describe("正解発表", () => {
   });
 });
 
+describe("写真当ての正解発表", () => {
+  it("写真当ての正解発表で各選択肢に誰の写真かを付ける", () => {
+    const child: Question = {
+      mode: "photo",
+      title: "子どもの頃の写真",
+      description: "新婦の子どもの頃の写真はどれ？",
+      explanation: "B が新婦。",
+      options: [
+        { label: "C", image: imageUrl("/images/c.jpg"), note: null, caption: "新郎", rank: 3 },
+        { label: "B", image: imageUrl("/images/b.jpg"), note: null, caption: "新婦", rank: 1 },
+      ],
+    };
+    expect(revealView(child).options).toEqual([
+      { label: "C", correct: false, caption: "新郎" },
+      { label: "B", correct: true, caption: "新婦" },
+    ]);
+  });
+});
+
 describe("正解発表の再演出", () => {
   it("正解発表をもう一度押しても正解情報は変わらない", () => {
     expectTypeOf<Parameters<typeof revealView>>().toEqualTypeOf<[q: Question]>();
@@ -65,9 +84,9 @@ describe("正解発表の再演出", () => {
       headline: "正解は A",
       explanation: "A が A5 ランク。",
       options: [
-        { label: "A", correct: true },
-        { label: "B", correct: false },
-        { label: "C", correct: false },
+        { label: "A", correct: true, caption: null },
+        { label: "B", correct: false, caption: null },
+        { label: "C", correct: false, caption: null },
       ],
     });
   });

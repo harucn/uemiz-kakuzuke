@@ -11,7 +11,7 @@ export function OptionCard({
   readonly option: PublicOption;
   /** 正解発表中だけ渡す。option と同じ表示位置のもの */
   readonly revealed?: RevealedOption;
-  /** 写真当ての問題だけ、正解発表前から写真の隅に出すラベル */
+  /** 写真当ての問題だけ、正解発表の前後を通して写真の隅に出すラベル。渡すと中央の大きなラベルを出さず、写真の下に誰の写真かを出す */
   readonly label?: Label;
   readonly size: "host" | "guest";
 }) {
@@ -21,9 +21,10 @@ export function OptionCard({
     <div className={className} data-label={revealed?.label ?? label}>
       <div className="option-card__media">
         <img className="option-card__photo" src={option.image} alt="" />
-        {revealed !== undefined ? <div className="label-bar">{revealed.label}</div> : label !== undefined && <div className="label-chip">{label}</div>}
+        {label !== undefined ? <div className="label-chip">{label}</div> : revealed !== undefined && <div className="label-bar">{revealed.label}</div>}
       </div>
       {option.note !== null && <p className="option-note">{option.note}</p>}
+      {label !== undefined && <p className="option-caption">{revealed?.caption}</p>}
     </div>
   );
 }

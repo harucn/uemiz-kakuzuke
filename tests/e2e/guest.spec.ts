@@ -7,7 +7,7 @@ import { loadQuestionSet } from "../../src/question-set/vite-plugin.ts";
 import { PONG } from "../../src/venue/protocol.ts";
 import { revealView } from "../../src/venue/view.ts";
 import { findSecrets } from "../leak.ts";
-import { expectLabelsBeforeReveal, expectNoLabels, expectOptions, optionCard, optionNote, optionPhoto, photoBoxes } from "./options.ts";
+import { expectLabelsBeforeReveal, expectNoLabels, expectOptions, expectRevealedOption, optionCard, optionNote, optionPhoto, photoBoxes } from "./options.ts";
 import {
   connectHost,
   connectVenue,
@@ -111,7 +111,7 @@ async function expectRevealed(page: Page, index: number) {
   await expect(page.locator(".guest-opts")).not.toContainText("正解");
   for (const [i, o] of view.options.entries()) {
     await expect(optionCard(page, i)).toHaveAttribute("data-label", o.label);
-    await expect(optionCard(page, i).locator(".label-bar")).toHaveText(o.label);
+    await expectRevealedOption(page, i, questions[index], o);
     if (o.correct) await expect(optionCard(page, i)).toHaveClass(/option-card--correct/);
     else await expect(optionCard(page, i)).not.toHaveClass(/option-card--correct/);
   }
@@ -354,6 +354,16 @@ test.describe("正解情報を表示しない", () => {
     await expectQuestion(page, index);
     await expectLabelsBeforeReveal(page, questions[index]);
     await expect(page.locator(".option-note")).toHaveCount(0);
+  });
+
+  test("写真当ての正解発表では中央にラベルを重ねず、写真の下に誰の写真かを表示する", async ({ page, baseURL }) => {
+    const index = questions.findIndex((q) => q.mode === "photo");
+    await openGuest(page);
+    const venue = await host(baseURL);
+    for (let i = 0; i <= index; i++) await operate(venue, "next");
+    await expectAsking(page, index);
+    await operate(venue, "reveal");
+    await expectRevealed(page, index);
   });
 
   test("正解発表の操作がない", async ({ page, baseURL }) => {

@@ -9,7 +9,7 @@ import {
   type SecretKind,
 } from "./model.ts";
 
-export type IssueCode = "shape" | "note-in-photo" | "rank-permutation" | "label-permutation" | "image-missing" | "public-text-leak";
+export type IssueCode = "shape" | "field-for-mode" | "rank-permutation" | "label-permutation" | "image-missing" | "public-text-leak";
 export interface Issue {
   readonly code: IssueCode;
   readonly path: readonly (string | number)[];
@@ -53,8 +53,8 @@ const setSchema = z.object(
             options: z
               .array(
                 z.object(
-                  { label, image: text, note: text.optional(), rank },
-                  typed("{ label, image, note, rank } の形"),
+                  { label, image: text, note: text.optional(), caption: text.optional(), rank },
+                  typed("{ label, image, note, caption, rank } の形"),
                 ),
                 typed("リスト"),
               )
@@ -129,10 +129,15 @@ function* crossFieldIssues(input: unknown, images: ReadonlyMap<string, ImageUrl>
 
     const photo = at(q, "mode") === "photo";
     for (const [j, o] of options.entries()) {
-      const hasNote = at(o, "note") !== undefined;
-      const path = ["questions", i, "options", j, "note"];
-      if (photo && hasNote) yield { code: "note-in-photo", path, message: "写真当ての問題（mode: photo）には note を書けません" };
-      if (!photo && !hasNote) yield { code: "shape", path, message: "必須の項目です" };
+      const [needed, unwanted] = photo ? (["caption", "note"] as const) : (["note", "caption"] as const);
+      if (at(o, needed) === undefined) yield { code: "shape", path: ["questions", i, "options", j, needed], message: "必須の項目です" };
+      if (at(o, unwanted) !== undefined) {
+        yield {
+          code: "field-for-mode",
+          path: ["questions", i, "options", j, unwanted],
+          message: photo ? "写真当ての問題（mode: photo）には note を書けません" : "caption は写真当ての問題（mode: photo）にだけ書けます",
+        };
+      }
     }
 
     const counted = options.length >= 2 && options.length <= 3;
@@ -222,6 +227,7 @@ function toQuestionSet(input: ValidInput, images: ReadonlyMap<string, ImageUrl>)
       label: o.label,
       image: images.get(o.image)!,
       note: o.note ?? null,
+      caption: o.caption ?? null,
       rank: o.rank as Rank,
     })) as unknown as Options,
   }));

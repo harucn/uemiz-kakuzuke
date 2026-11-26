@@ -20,8 +20,8 @@ const wine: Question = {
   description: "高いワインはどちら？",
   explanation: "B は 1本 5万円のボルドー。",
   options: [
-    { label: "A", image: imageUrl("/images/aaa.jpg"), note: "チリ産の赤ワイン", rank: 2 },
-    { label: "B", image: imageUrl("/images/bbb.jpg"), note: "フランス産の赤ワイン", rank: 1 },
+    { label: "A", image: imageUrl("/images/aaa.jpg"), note: "チリ産の赤ワイン", caption: null, rank: 2 },
+    { label: "B", image: imageUrl("/images/bbb.jpg"), note: "フランス産の赤ワイン", caption: null, rank: 1 },
   ],
 };
 
@@ -31,9 +31,9 @@ const beef: Question = {
   description: "高い牛肉はどれ？",
   explanation: "A が A5 ランク。",
   options: [
-    { label: "A", image: imageUrl("/images/ccc.jpg"), note: "霜降りの牛肉", rank: 1 },
-    { label: "B", image: imageUrl("/images/ddd.jpg"), note: "赤身の牛肉", rank: 3 },
-    { label: "C", image: imageUrl("/images/eee.jpg"), note: "脂の多い牛肉", rank: 2 },
+    { label: "A", image: imageUrl("/images/ccc.jpg"), note: "霜降りの牛肉", caption: null, rank: 1 },
+    { label: "B", image: imageUrl("/images/ddd.jpg"), note: "赤身の牛肉", caption: null, rank: 3 },
+    { label: "C", image: imageUrl("/images/eee.jpg"), note: "脂の多い牛肉", caption: null, rank: 2 },
   ],
 };
 
@@ -44,8 +44,8 @@ const water: Question = {
   description: "高い水はどちら？",
   explanation: "A は水道水。",
   options: [
-    { label: "B", image: imageUrl("/images/ggg.jpg"), note: "海外の水", rank: 1 },
-    { label: "A", image: imageUrl("/images/fff.jpg"), note: "国内の水", rank: 2 },
+    { label: "B", image: imageUrl("/images/ggg.jpg"), note: "海外の水", caption: null, rank: 1 },
+    { label: "A", image: imageUrl("/images/fff.jpg"), note: "国内の水", caption: null, rank: 2 },
   ],
 };
 
@@ -63,9 +63,9 @@ describe("写真当ての問題の公開形", () => {
     description: "新婦の子どもの頃の写真はどれ？",
     explanation: "B が新婦。",
     options: [
-      { label: "C", image: imageUrl("/images/c.jpg"), note: null, rank: 3 },
-      { label: "B", image: imageUrl("/images/b.jpg"), note: null, rank: 1 },
-      { label: "A", image: imageUrl("/images/a.jpg"), note: null, rank: 2 },
+      { label: "C", image: imageUrl("/images/c.jpg"), note: null, caption: "新郎", rank: 3 },
+      { label: "B", image: imageUrl("/images/b.jpg"), note: null, caption: "新婦", rank: 1 },
+      { label: "A", image: imageUrl("/images/a.jpg"), note: null, caption: "新婦の姉", rank: 2 },
     ],
   };
 

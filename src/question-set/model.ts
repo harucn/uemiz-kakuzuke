@@ -11,6 +11,8 @@ export interface Option {
   readonly image: ImageUrl;
   /** 選択肢の説明。銘柄を書いてもよい。photo の問題では null、price の問題では必ず文字列 */
   readonly note: string | null;
+  /** 誰の（なんの）写真か。正解発表後に写真の下に出す正解情報。photo の問題では必ず文字列、price の問題では null */
+  readonly caption: string | null;
   /** 1 = 最も高価。正解の唯一の情報源 */
   readonly rank: Rank;
 }

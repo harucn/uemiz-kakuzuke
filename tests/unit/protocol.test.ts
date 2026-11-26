@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseIntent, parseServerFrame, venueUrl } from "../../src/venue/protocol.ts";
 
-const reveal = { headline: "正解は A", explanation: "解説", options: [{ label: "A", correct: true }] };
+const reveal = { headline: "正解は A", explanation: "解説", options: [{ label: "A", correct: true, caption: null }] };
 const frame = (view: unknown, rest: object = {}) =>
   JSON.stringify({ type: "snapshot", cause: "joined", publicVersion: "v", view, ...rest });
 
