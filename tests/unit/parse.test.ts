@@ -50,22 +50,24 @@ describe("問題セットのデータ形式", () => {
         prizes: [],
         questions: [
           {
+            mode: "price",
             title: "ワイン",
             description: "高いワインはどちら？",
             explanation: "B は 1本 5万円のシャトー・マルゴー。A はスーパーで買える赤ワインでした。",
             options: [
-              { label: "A", image: "/images/aaa.jpg", note: "チリ産の赤ワイン", rank: 2 },
-              { label: "B", image: "/images/bbb.jpg", note: "フランス産の赤ワイン", rank: 1 },
+              { label: "A", image: "/images/aaa.jpg", note: "チリ産の赤ワイン", caption: null, rank: 2 },
+              { label: "B", image: "/images/bbb.jpg", note: "フランス産の赤ワイン", caption: null, rank: 1 },
             ],
           },
           {
+            mode: "price",
             title: "牛肉",
             description: "高い牛肉はどれ？",
             explanation: "A が A5 ランク。",
             options: [
-              { label: "A", image: "/images/ccc.jpg", note: "霜降りの牛肉", rank: 1 },
-              { label: "B", image: "/images/ddd.jpg", note: "赤身の牛肉", rank: 3 },
-              { label: "C", image: "/images/eee.jpg", note: "脂の多い牛肉", rank: 2 },
+              { label: "A", image: "/images/ccc.jpg", note: "霜降りの牛肉", caption: null, rank: 1 },
+              { label: "B", image: "/images/ddd.jpg", note: "赤身の牛肉", caption: null, rank: 3 },
+              { label: "C", image: "/images/eee.jpg", note: "脂の多い牛肉", caption: null, rank: 2 },
             ],
           },
         ],
@@ -113,6 +115,42 @@ describe("問題セットのデータ形式", () => {
   ])("選択肢の説明が空の選択肢は検証に失敗する（%s）", (_, value) => {
     const result = parseQuestionSet({ title, questions: [{ ...wine, options: [table, { ...bordeaux, note: value }] }] }, images);
     expect(codesAndPaths(result)).toStrictEqual([["shape", ["questions", 0, "options", 1, "note"]]]);
+  });
+
+  const photos = [a5, imported, domestic].map(({ note: _, ...o }, j) => ({ ...o, caption: ["新婦", "新郎", "新婦の姉"][j] }));
+  const child = { ...beef, mode: "photo", options: photos };
+
+  it("写真当ての問題は選択肢の説明なしで検証を通る", () => {
+    const result = parseQuestionSet({ title, questions: [child] }, images);
+    if (!result.ok) throw new Error(formatIssues(result.issues));
+    expect(result.set.questions[0].mode).toBe("photo");
+    expect(result.set.questions[0].options.map((o) => [o.note, o.caption])).toStrictEqual([
+      [null, "新婦"],
+      [null, "新郎"],
+      [null, "新婦の姉"],
+    ]);
+  });
+
+  it("写真当ての問題に選択肢の説明を書くと検証に失敗する", () => {
+    const options = [{ ...photos[0], note: "霜降りの牛肉" }, photos[1], photos[2]];
+    const issues = issuesOf(parseQuestionSet({ title, questions: [{ ...child, options }] }, images));
+    expect(issues.map((i) => [i.code, i.path])).toStrictEqual([["field-for-mode", ["questions", 0, "options", 0, "note"]]]);
+  });
+
+  it("写真当ての問題で誰の写真かがない選択肢は検証に失敗する", () => {
+    const { caption: _, ...withoutCaption } = photos[1];
+    const issues = issuesOf(parseQuestionSet({ title, questions: [{ ...child, options: [photos[0], withoutCaption, photos[2]] }] }, images));
+    expect(issues.map((i) => [i.code, i.path, i.message])).toStrictEqual([["shape", ["questions", 0, "options", 1, "caption"], "必須の項目です"]]);
+  });
+
+  it("写真当てでない問題に誰の写真かを書くと検証に失敗する", () => {
+    const issues = issuesOf(parseQuestionSet({ title, questions: [{ ...wine, options: [table, { ...bordeaux, caption: "ボルドー" }] }] }, images));
+    expect(issues.map((i) => [i.code, i.path])).toStrictEqual([["field-for-mode", ["questions", 0, "options", 1, "caption"]]]);
+  });
+
+  it("未知の mode は検証に失敗する", () => {
+    const issues = issuesOf(parseQuestionSet({ title, questions: [{ ...wine, mode: "order" }] }, images));
+    expect(issues.map((i) => [i.code, i.path])).toStrictEqual([["shape", ["questions", 0, "mode"]]]);
   });
 
   it("選択肢の説明がない選択肢は検証に失敗する", () => {

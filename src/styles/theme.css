@@ -90,6 +90,39 @@ body {
   color: var(--paper);
   background: var(--c, var(--green));
 }
+/* 写真当ての問題で、正解発表前から写真の左上に出すラベル。写真の中央（顔など）を隠さない */
+.label-chip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  min-width: 1.3em;
+  padding: 0 0.15em;
+  font-family: var(--label);
+  font-weight: 700;
+  font-size: 5cqw;
+  text-align: center;
+  line-height: 1.2;
+  color: var(--paper);
+  background: var(--c, var(--green));
+}
+
+/* 写真当ての問題で、正解発表後に写真の下に出す誰の写真か。発表前も同じ 1 行ぶんの高さに固定し、写真の座標と大きさを変えない */
+.option-caption {
+  height: 1.4em;
+  margin: 0;
+  overflow: hidden;
+  color: var(--ink);
+  text-align: center;
+  line-height: 1.4;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.option-card--host .option-caption {
+  font-size: 1.8cqw;
+}
+.option-card--guest .option-caption {
+  font-size: 15px;
+}
 
 .option-note {
   margin: 0;

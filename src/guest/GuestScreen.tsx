@@ -80,7 +80,7 @@ function QuestionView({
       <div className="guest-opts">
         {question.options.map((o, i) => (
           <CardSlot key={i} face={reveal === null ? "asking" : "revealed"} order={i} onTurned={i === last ? onTurned : undefined}>
-            <OptionCard size="guest" option={o} revealed={reveal?.options[i]} />
+            <OptionCard size="guest" option={o} revealed={reveal?.options[i]} label={question.labels?.[i]} />
           </CardSlot>
         ))}
       </div>

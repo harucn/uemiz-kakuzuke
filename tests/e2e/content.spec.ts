@@ -9,7 +9,7 @@ import { revealView } from "../../src/venue/view.ts";
 import { secretStrings, type Label } from "../../src/question-set/model.ts";
 import { loadQuestionSet } from "../../src/question-set/vite-plugin.ts";
 import { findSecrets } from "../leak.ts";
-import { expectNoLabels, expectOptions, optionCard, photoBoxes, settleCards } from "./options.ts";
+import { expectLabelsBeforeReveal, expectOptions, expectRevealedOption, optionCard, photoBoxes, settleCards } from "./options.ts";
 import { connectHost, freshVenue, operate, recordTraffic, skipIfRemote, TEXT_TYPE, viewShapeProblems } from "./venue.ts";
 
 test.beforeEach(freshVenue);
@@ -164,7 +164,7 @@ async function expectRevealed(page: Page, index: number) {
   await expect(page.locator(".host-opts")).not.toContainText("正解");
   for (const [i, o] of view.options.entries()) {
     await expect(optionCard(page, i)).toHaveAttribute("data-label", o.label);
-    await expect(card(page, o.label).locator(".label-bar")).toHaveText(o.label);
+    await expectRevealedOption(page, i, questions[index], o);
     if (o.correct) await expect(card(page, o.label)).toHaveClass(/option-card--correct/);
   }
 }
@@ -208,7 +208,7 @@ test.describe("司会画面", () => {
         await expectQuestion(page, i);
         expect(await overflows(page, "question"), `第 ${i + 1} 問の正解発表前`).toEqual([]);
         expect(await smallPhotos(page), `第 ${i + 1} 問の正解発表前`).toEqual([]);
-        await expectNoLabels(page);
+        await expectLabelsBeforeReveal(page, questions[i]);
         const asking = await photoBoxes(page);
         await driver.reveal(page);
         await expectRevealed(page, i);

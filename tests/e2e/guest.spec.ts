@@ -7,7 +7,7 @@ import { loadQuestionSet } from "../../src/question-set/vite-plugin.ts";
 import { PONG } from "../../src/venue/protocol.ts";
 import { revealView } from "../../src/venue/view.ts";
 import { findSecrets } from "../leak.ts";
-import { expectNoLabels, expectOptions, optionCard, optionNote, optionPhoto, photoBoxes } from "./options.ts";
+import { expectLabelsBeforeReveal, expectNoLabels, expectOptions, expectRevealedOption, optionCard, optionNote, optionPhoto, photoBoxes } from "./options.ts";
 import {
   connectHost,
   connectVenue,
@@ -96,11 +96,11 @@ function visibleAnswerInfo(page: Page) {
   );
 }
 
-/** 第 index + 1 問が正解発表前の状態（正解情報もラベルもない）で表示されている */
+/** 第 index + 1 問が正解発表前の状態（正解情報がなく、ラベルは写真当ての問題だけ）で表示されている */
 async function expectAsking(page: Page, index: number) {
   await expectQuestion(page, index);
   expect(await visibleAnswerInfo(page), "正解発表前に見えている正解情報").toEqual([]);
-  await expectNoLabels(page);
+  await expectLabelsBeforeReveal(page, questions[index]);
 }
 
 /** 第 index + 1 問の正解発表（正解ラベル・解説・表示順の各選択肢のラベル・正解の選択肢）が表示されている */
@@ -111,7 +111,7 @@ async function expectRevealed(page: Page, index: number) {
   await expect(page.locator(".guest-opts")).not.toContainText("正解");
   for (const [i, o] of view.options.entries()) {
     await expect(optionCard(page, i)).toHaveAttribute("data-label", o.label);
-    await expect(optionCard(page, i).locator(".label-bar")).toHaveText(o.label);
+    await expectRevealedOption(page, i, questions[index], o);
     if (o.correct) await expect(optionCard(page, i)).toHaveClass(/option-card--correct/);
     else await expect(optionCard(page, i)).not.toHaveClass(/option-card--correct/);
   }
@@ -187,7 +187,7 @@ test.describe("問題画面の表示", () => {
     for (const [i, o] of questions[THREE].options.entries()) {
       await expect(optionPhoto(page, i)).toBeVisible();
       await expect(optionPhoto(page, i)).toHaveAttribute("src", o.image);
-      await expect(optionNote(page, i)).toHaveText(o.note);
+      await expect(optionNote(page, i)).toHaveText(o.note!);
     }
   });
 });
@@ -335,14 +335,35 @@ test.describe("正解情報を表示しない", () => {
     }
   });
 
-  test("どの問題でもラベルが表示されない", async ({ page, baseURL }) => {
+  test("写真当て以外の問題ではラベルが表示されない", async ({ page, baseURL }) => {
+    expect(questions.some((q) => q.mode === "photo"), "フィクスチャに写真当ての問題がある").toBe(true);
     await openGuest(page);
     const venue = await host(baseURL);
     for (let i = 0; i <= last; i++) {
       await operate(venue, "next");
       await expectQuestion(page, i);
-      await expectNoLabels(page);
+      if (questions[i].mode === "price") await expectNoLabels(page);
     }
+  });
+
+  test("写真当ての問題は正解発表前から各選択肢にラベルを表示する", async ({ page, baseURL }) => {
+    const index = questions.findIndex((q) => q.mode === "photo");
+    await openGuest(page);
+    const venue = await host(baseURL);
+    for (let i = 0; i <= index; i++) await operate(venue, "next");
+    await expectQuestion(page, index);
+    await expectLabelsBeforeReveal(page, questions[index]);
+    await expect(page.locator(".option-note")).toHaveCount(0);
+  });
+
+  test("写真当ての正解発表では中央にラベルを重ねず、写真の下に誰の写真かを表示する", async ({ page, baseURL }) => {
+    const index = questions.findIndex((q) => q.mode === "photo");
+    await openGuest(page);
+    const venue = await host(baseURL);
+    for (let i = 0; i <= index; i++) await operate(venue, "next");
+    await expectAsking(page, index);
+    await operate(venue, "reveal");
+    await expectRevealed(page, index);
   });
 
   test("正解発表の操作がない", async ({ page, baseURL }) => {

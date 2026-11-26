@@ -15,6 +15,8 @@ const RevealedOptionSchema = z
   .strictObject({
     label: z.enum(["A", "B", "C"]),
     correct: z.boolean(),
+    /** 写真当ての問題だけ、誰の（なんの）写真か */
+    caption: z.string().nullable(),
   })
   .readonly();
 export type RevealedOption = z.infer<typeof RevealedOptionSchema>;

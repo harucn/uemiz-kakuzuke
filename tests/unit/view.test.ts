@@ -48,7 +48,7 @@ describe("正解情報の関所", () => {
       if (view.phase !== "revealed") throw new Error("revealed のはず");
       expect(keysOf(view.reveal)).toEqual(["explanation", "headline", "options"]);
       for (const option of view.reveal.options) {
-        expect(keysOf(option)).toEqual(["correct", "label"]);
+        expect(keysOf(option)).toEqual(["caption", "correct", "label"]);
       }
     }
   });

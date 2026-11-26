@@ -1,3 +1,5 @@
+/** price: 一番高いものを当てる。ラベルは正解発表まで伏せる。photo: 写真を当てる。ラベルを発表前から出し、選択肢の説明を持たない */
+export type Mode = "price" | "photo";
 export type Label = "A" | "B" | "C";
 export type Rank = 1 | 2 | 3;
 /** 公開 URL（例 "/images/3f9a2c41.jpg"）。中身のハッシュから作り、元のファイル名を含まない。問題コンパイラ（vite-plugin.ts）だけが作れる */
@@ -7,8 +9,10 @@ export interface Option {
   /** 作者が書く。表示順とは無関係 */
   readonly label: Label;
   readonly image: ImageUrl;
-  /** 選択肢の説明。銘柄を書いてもよい */
-  readonly note: string;
+  /** 選択肢の説明。銘柄を書いてもよい。photo の問題では null、price の問題では必ず文字列 */
+  readonly note: string | null;
+  /** 誰の（なんの）写真か。正解発表後に写真の下に出す正解情報。photo の問題では必ず文字列、price の問題では null */
+  readonly caption: string | null;
   /** 1 = 最も高価。正解の唯一の情報源 */
   readonly rank: Rank;
 }
@@ -16,6 +20,7 @@ export interface Option {
 export type Options = readonly [Option, Option] | readonly [Option, Option, Option];
 
 export interface Question {
+  readonly mode: Mode;
   readonly title: string;
   readonly description: string;
   readonly explanation: string;
@@ -44,6 +49,8 @@ export interface Prize {
 export type PublicOption = Pick<Option, "image" | "note">;
 export type PublicQuestion = Pick<Question, "title" | "description"> & {
   readonly options: readonly [PublicOption, PublicOption] | readonly [PublicOption, PublicOption, PublicOption];
+  /** photo の問題だけ、表示順のラベル。price の問題のラベルは正解発表まで秘密なので null */
+  readonly labels: readonly Label[] | null;
 };
 export type PublicQuestionSet = {
   readonly title: string;
@@ -53,7 +60,7 @@ export type PublicQuestionSet = {
 };
 
 export const PUBLIC_SET_KEYS = ["title", "rules", "prizes", "questions"] as const;
-export const PUBLIC_QUESTION_KEYS = ["title", "description", "options"] as const;
+export const PUBLIC_QUESTION_KEYS = ["title", "description", "options", "labels"] as const;
 export const PUBLIC_OPTION_KEYS = ["image", "note"] as const;
 
 function toPublicOption(o: Option): PublicOption {
@@ -69,6 +76,7 @@ function toPublicQuestion(q: Question): PublicQuestion {
       o.length === 2
         ? [toPublicOption(o[0]), toPublicOption(o[1])]
         : [toPublicOption(o[0]), toPublicOption(o[1]), toPublicOption(o[2])],
+    labels: q.mode === "photo" ? o.map((option) => option.label) : null,
   };
 }
 

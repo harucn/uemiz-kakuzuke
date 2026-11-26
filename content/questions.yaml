@@ -1,4 +1,4 @@
-# options は画面に出す順に書く。label は会場で配るものに書いたラベル（A・B・C）。rank 1 が最も高価
+# options は画面に出す順に書く。label は会場で配るものに書いたラベル（A・B・C）。rank 1 が正解（mode を書かない問題では最も高価なもの）
 title: 2026 忘年会 格付けチェック # 会のタイトル。タイトル画面に出る（参加者にも見える）
 rules: # ゲームのルール。タイトル画面の次のルール画面に、書いた順に出る（参加者にも見える）。省略するとルール画面を出さない
   - 全4問、各テーブル対抗のチーム戦です
@@ -33,10 +33,11 @@ questions:
       - { label: A, image: A5和牛.png, note: 白鶴まる, rank: 2 }
       - { label: B, image: 輸入牛.png, note: 鬼ころし, rank: 3 }
 
-  - title: 子どもの頃の写真
+  - mode: photo # 写真当て: A・B・C を発表前から出す。note は書かず、caption（誰の写真か）を正解発表後に出す
+    title: 子どもの頃の写真
     description: A,B,C の中で「新婦の子どもの頃の写真」はどれ？
     explanation: //TODO # TODO
     options:
-      - { label: C, image: 国産牛.png, note: 山田, rank: 1 }
-      - { label: A, image: A5和牛.png, note: 田中, rank: 2 }
-      - { label: B, image: 輸入牛.png, note: 川崎, rank: 3 }
+      - { label: C, image: 国産牛.png, caption: 新婦, rank: 1 }
+      - { label: A, image: A5和牛.png, caption: TODO, rank: 2 }
+      - { label: B, image: 輸入牛.png, caption: TODO, rank: 3 }

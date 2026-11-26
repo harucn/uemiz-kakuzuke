@@ -10,6 +10,7 @@ export function revealView(q: Question): RevealView {
     options: q.options.map((o) => ({
       label: o.label,
       correct: o.label === answer,
+      caption: o.caption,
     })),
   };
 }
