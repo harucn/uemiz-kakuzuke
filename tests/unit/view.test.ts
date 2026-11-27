@@ -7,7 +7,7 @@ import { findSecrets } from "../leak.ts";
 import { venueSet } from "./fixtures.ts";
 
 const indexes = venueSet.questions.map((_, i) => i);
-const askingStates: readonly VenueState[] = [{ phase: "title" }, { phase: "rules" }, { phase: "prizes" }, ...indexes.map((index) => ({ phase: "asking", index }) as const)];
+const askingStates: readonly VenueState[] = [{ phase: "title" }, { phase: "rules" }, { phase: "prizes" }, { phase: "finale" }, { phase: "awards" }, ...indexes.map((index) => ({ phase: "asking", index }) as const)];
 const revealedStates = indexes.map((index) => ({ phase: "revealed", index, run: 1 }) as const);
 const allSecrets = secretStrings(venueSet);
 
@@ -36,6 +36,8 @@ describe("正解情報の関所", () => {
     expect(keysOf(viewOf({ phase: "title" }, venueSet))).toEqual(["phase"]);
     expect(viewOf({ phase: "rules" }, venueSet)).toEqual({ phase: "rules" });
     expect(viewOf({ phase: "prizes" }, venueSet)).toEqual({ phase: "prizes" });
+    expect(viewOf({ phase: "finale" }, venueSet)).toEqual({ phase: "finale" });
+    expect(viewOf({ phase: "awards" }, venueSet)).toEqual({ phase: "awards" });
     for (const index of indexes) {
       expect(keysOf(viewOf({ phase: "asking", index }, venueSet))).toEqual(["index", "phase"]);
     }

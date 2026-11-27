@@ -1,9 +1,10 @@
 import { useEffect, useRef } from "react";
 import { preload } from "react-dom";
-import { boundsOf, deckOf, type Deck, type Intro, type Position } from "../deck/cursor.ts";
+import { boundsOf, deckOf, type Deck, type Intro, type Outro, type Position } from "../deck/cursor.ts";
 import type { PublicQuestionSet } from "../question-set/model.ts";
 import { CardSlot, useCardTurn } from "../ui/CardSlot.tsx";
 import { Celebration } from "../ui/Celebration.tsx";
+import { FinaleScreen } from "../ui/FinaleScreen.tsx";
 import { IntroScreen } from "../ui/IntroScreen.tsx";
 import { OptionCard } from "../ui/OptionCard.tsx";
 import { positionOf } from "../venue/machine.ts";
@@ -19,7 +20,8 @@ export function HostScreen({ set }: { readonly set: PublicQuestionSet }) {
   const { view, connection, celebration, operate } = useVenue("host");
   useEffect(() => installHostKeys(window, (intent) => operate?.(intent)), [operate]);
   const position = view === null ? null : positionOf(view);
-  const upcoming = position === null ? null : typeof position === "number" ? position + 1 : 0;
+  // 最終問の後の画面では次に出る問題がないので先読みしない
+  const upcoming = position === null ? null : typeof position === "number" ? position + 1 : position === "finale" || position === "awards" ? null : 0;
   for (const option of upcoming === null ? [] : (set.questions[upcoming]?.options ?? [])) preload(option.image, { as: "image" });
   // 全画面にするのは枠ではなくページ全体。枠の 16:9 の寸法計算をそのまま使えて、画面の比が 16:9 でなくても崩れない
   const stage = useRef<HTMLElement>(null);
@@ -34,8 +36,18 @@ export function HostScreen({ set }: { readonly set: PublicQuestionSet }) {
         <div className="host host--title">
           <TitleStage set={set} operate={operate} onFullscreen={onFullscreen} />
         </div>
-      ) : view.phase === "rules" || view.phase === "prizes" ? (
+      ) : view.phase === "rules" || view.phase === "prizes" || view.phase === "awards" ? (
         <IntroStage set={set} screen={view.phase} operate={operate} onFullscreen={onFullscreen} />
+      ) : view.phase === "finale" ? (
+        <>
+          <div className="host host--title">
+            <FinaleScreen size="host" />
+            <div className="host-foot host-foot--title">
+              <Controls position="finale" deck={deckOf(set)} operate={operate} onFullscreen={onFullscreen} />
+            </div>
+          </div>
+          {celebration !== null && <Celebration key={celebration} />}
+        </>
       ) : (
         <Stage key={view.index} set={set} view={view} celebration={celebration} operate={operate} onFullscreen={onFullscreen} />
       )}
@@ -76,7 +88,7 @@ function IntroStage({
   onFullscreen,
 }: {
   readonly set: PublicQuestionSet;
-  readonly screen: Intro;
+  readonly screen: Intro | "awards";
   readonly operate: Operate;
   readonly onFullscreen: () => void;
 }) {
@@ -98,7 +110,7 @@ function Stage({
   onFullscreen,
 }: {
   readonly set: PublicQuestionSet;
-  readonly view: Exclude<VenueView, { readonly phase: "title" | Intro }>;
+  readonly view: Exclude<VenueView, { readonly phase: "title" | Intro | Outro }>;
   readonly celebration: string | null;
   readonly operate: Operate;
   readonly onFullscreen: () => void;

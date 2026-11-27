@@ -233,6 +233,17 @@ describe("openVenueSocket", () => {
     expect(t.sockets).toHaveLength(2);
   });
 
+  it("celebration は operated の結果発表の画面で finale になり、途中から開いたときは null", () => {
+    const t = setup();
+    t.open();
+    t.last().receive(frame({ phase: "finale" }, "joined"));
+    expect(t.venue.snapshot().celebration).toBeNull();
+    t.last().receive(frame({ phase: "finale" }, "operated"));
+    expect(t.venue.snapshot().celebration).toBe("finale");
+    t.last().receive(frame({ phase: "awards" }, "operated"));
+    expect(t.venue.snapshot().celebration).toBeNull();
+  });
+
   it("celebration は operated かつ revealed のときだけ `${index}:${run}` になる", () => {
     const t = setup();
     t.open();

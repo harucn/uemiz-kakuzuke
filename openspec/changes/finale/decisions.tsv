@@ -1,0 +1,9 @@
+ts	phase	decision	why	evidence	result
+2026-11-27T12:12:25Z	design	最終問の後の画面を Outro として Deck の並びに足した	prizes を並びに 2 回置くと indexOf で位置が決まらず、状態の属性にすると boundsOf と ◀ の規則から外れるため	design.md Decisions 1, tests/unit/cursor.test.ts	並びの単体テストが通る
+2026-11-27T12:12:25Z	design	紙吹雪は celebrationOf が operated の finale に返す合図で出す	再読み込みや途中参加で紙吹雪を出さない正解発表の規則と揃えるため	src/venue/socket.ts, tests/unit/use-venue.test.ts	joined では null、operated では finale
+2026-11-27T12:12:25Z	specs	「前後の画面への移動」を REMOVED し「画面の並びと前後の移動」を ADDED した	openspec validate が MODIFIED でシナリオを落とすとエラーにするため（reviewer A の MODIFIED で消せるという指摘は validator の出力で退けた）	openspec validate の「MODIFIED … omits scenario(s)」	validate --strict が通る
+2026-11-27T12:12:25Z	interrogate	最後の 2 画面の Space・Enter を E2E のキーボード操作に足し、文字のアニメーションの肯定側テストを足した	両レビュアーが Enter と肯定側の欠けを指摘したため	tests/e2e/host.spec.ts「結果発表の画面では Space キーと Enter キーで何も起きない」「最終問の次は結果発表の画面で、紙吹雪を再生する」	E2E 104 件が通る
+2026-11-27T12:12:25Z	interrogate	awards の画面はフィクスチャに prizes を足さず実データの content E2E で確かめる	フィクスチャに prizes を足すとタイトル画面から第 1 問へ進む既存テストの前提が崩れるため	design.md Risks	content E2E 8 件が通る
+2026-11-27T12:12:25Z	interrogate	最後の画面では次の問題を先読みしない	outro で第 1 問の写真を全員のスマホが取りに行くのは無駄なため（reviewer A）	src/host/HostScreen.tsx, src/guest/GuestScreen.tsx	typecheck と E2E が通る
+2026-11-27T12:12:25Z	interrogate	司会画面の Stage の共通化と celebration の型の判別共用体化はしない	画面が 1 つ増えるたびに効く抽象で、今回の 2 画面には要らないため	reviewer A・B の指摘 6	見送り
+2026-11-27T12:12:25Z	apply	tasks を 1 つの検証単位にまとめた	VenueView に phase を足すと両画面が扱うまで型検査が通らず、会場側だけのコミットは単独で検証できないため	会場側だけを切り出したコミットで tsc が HostScreen・GuestScreen のエラーを出した	1 コミットにした

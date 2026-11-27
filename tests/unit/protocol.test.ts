@@ -28,8 +28,8 @@ describe("parseIntent", () => {
 });
 
 describe("parseServerFrame", () => {
-  it("5 種類の画面の状態を読む", () => {
-    for (const view of [{ phase: "title" }, { phase: "rules" }, { phase: "prizes" }, { phase: "asking", index: 2 }, { phase: "revealed", index: 1, run: 2, reveal }]) {
+  it("7 種類の画面の状態を読む", () => {
+    for (const view of [{ phase: "title" }, { phase: "rules" }, { phase: "prizes" }, { phase: "finale" }, { phase: "awards" }, { phase: "asking", index: 2 }, { phase: "revealed", index: 1, run: 2, reveal }]) {
       expect(parseServerFrame(frame(view))?.view).toEqual(view);
     }
   });

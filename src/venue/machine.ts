@@ -1,9 +1,10 @@
-import { move, type Deck, type Intro, type Position } from "../deck/cursor.ts";
+import { move, type Deck, type Intro, type Outro, type Position } from "../deck/cursor.ts";
 import type { Intent } from "./protocol.ts";
 
 export type VenueState =
   | { readonly phase: "title" }
   | { readonly phase: Intro }
+  | { readonly phase: Outro }
   | { readonly phase: "asking"; readonly index: number }
   /** run は正解発表を押した回数 */
   | { readonly phase: "revealed"; readonly index: number; readonly run: number };
@@ -28,7 +29,7 @@ export function step(state: VenueState, intent: Intent, deck: Deck): VenueState 
       return to === from ? state : at(to);
     }
     case "reveal":
-      // 問題の前の画面の Space・Enter はリモコンの連打で第 1 問の正解発表まで進まないよう無視する
+      // 問題の前後の画面の Space・Enter はリモコンの連打で第 1 問の正解発表まで進まないよう無視する
       if (!("index" in state)) return state;
       return state.phase === "asking"
         ? { phase: "revealed", index: state.index, run: 1 }

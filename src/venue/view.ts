@@ -21,6 +21,8 @@ export function viewOf(state: VenueState, set: QuestionSet): VenueView {
     case "title":
     case "rules":
     case "prizes":
+    case "finale":
+    case "awards":
       return { phase: state.phase };
     case "asking":
       return { phase: "asking", index: state.index };

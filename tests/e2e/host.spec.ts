@@ -167,7 +167,43 @@ test.describe("問題画面の表示", () => {
   });
 });
 
-test.describe("前後の画面への移動", () => {
+test.describe("結果発表の画面の表示", () => {
+  test("最終問の次は結果発表の画面で、紙吹雪を再生する", async ({ page }) => {
+    await openHost(page);
+    await goTo(page, last);
+    await nextButton(page).click();
+    const word = page.getByRole("heading", { level: 1 });
+    await expect(word).toHaveAccessibleName("結果発表");
+    await expect(celebration(page)).toHaveCount(1);
+    await expect(revealButton(page)).toHaveCount(0);
+    expect(await word.locator("span").evaluateAll((spans) => spans.map((el) => getComputedStyle(el).animationName))).toEqual(
+      Array(4).fill("finale-drop, finale-bounce"),
+    );
+  });
+
+  test("結果発表の画面で再読み込みすると紙吹雪を再生しない", async ({ page }) => {
+    await openHost(page);
+    await goTo(page, last);
+    await nextButton(page).click();
+    await expect(celebration(page)).toHaveCount(1);
+    await page.reload();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName("結果発表");
+    await expect(celebration(page)).toHaveCount(0);
+  });
+
+  test("reduced motion が有効なときは結果発表の文字を動かさず紙吹雪も再生しない", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await openHost(page);
+    await goTo(page, last);
+    await nextButton(page).click();
+    const word = page.getByRole("heading", { level: 1 });
+    await expect(word).toHaveAccessibleName("結果発表");
+    expect(await word.locator("span").evaluateAll((spans) => spans.map((el) => getComputedStyle(el).animationName))).toEqual(Array(4).fill("none"));
+    await expect(celebration(page)).toHaveCount(0);
+  });
+});
+
+test.describe("画面の並びと前後の移動", () => {
   test("タイトル画面で次へを押すと第 1 問を表示する", async ({ page }) => {
     await openTitle(page);
     await nextButton(page).click();
@@ -200,11 +236,16 @@ test.describe("前後の画面への移動", () => {
     await expectAsking(page, 0);
   });
 
-  test("最終問では次へを操作できない", async ({ page }) => {
+  test("最終問の次は結果発表の画面で、そこでは次へと正解発表を操作できない", async ({ page }) => {
     await openHost(page);
     await goTo(page, last);
+    await nextButton(page).click();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName("結果発表");
+    await expect(revealButton(page)).toHaveCount(0);
     await expect(nextButton(page)).toBeDisabled();
-    await nextButton(page).click({ force: true });
+    await page.keyboard.press("Space");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName("結果発表");
+    await prevButton(page).click();
     await expectAsking(page, last);
   });
 
@@ -358,6 +399,21 @@ test.describe("全画面表示", () => {
 });
 
 test.describe("キーボード操作", () => {
+  test("結果発表の画面では Space キーと Enter キーで何も起きない", async ({ page }) => {
+    await openHost(page);
+    await goTo(page, last);
+    await page.keyboard.press("ArrowRight");
+    for (const key of ["Space", "Enter"]) {
+      await page.keyboard.press(key);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName("結果発表");
+      expect(await visibleAnswerInfo(page), `${key} を押した後に見えている正解情報`).toEqual([]);
+    }
+    // 陽性対照: 同じキーで最終問なら正解発表になる
+    await page.keyboard.press("ArrowLeft");
+    await page.keyboard.press("Enter");
+    await expect(correctCard(page)).toBeVisible();
+  });
+
   for (const key of ["ArrowRight", "PageDown"]) {
     const name = key === "ArrowRight" ? "→" : key;
     test(`${name} キーでタイトル画面から第 1 問へ進む`, async ({ page }) => {

@@ -76,7 +76,7 @@ describe("正解発表の再演出", () => {
     expectTypeOf<Parameters<typeof revealView>>().toEqualTypeOf<[q: Question]>();
     const questions = [wine, beef] as const;
     const reveal = { type: "reveal" } as const;
-    const deck = { total: questions.length, intro: [] };
+    const deck = { total: questions.length, intro: [], outro: [] };
     const first = step({ phase: "asking", index: 1 }, reveal, deck);
     const second = step(first, reveal, deck);
     expect(second).toMatchObject({ phase: "revealed", index: 1, run: 2 });

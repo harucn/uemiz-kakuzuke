@@ -270,6 +270,35 @@ test.describe("正解発表の演出", () => {
   });
 });
 
+test.describe("結果発表の表示", () => {
+  test("司会が最終問の次へ進むと結果発表と紙吹雪を出す", async ({ page, baseURL }) => {
+    const venue = await host(baseURL);
+    await operate(venue, ...questions.map(() => "next" as const));
+    await openGuest(page);
+    await operate(venue, "next");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName("結果発表");
+    await expect(celebration(page)).toHaveCount(1);
+  });
+
+  test("reduced motion が有効なときは結果発表で紙吹雪を再生しない", async ({ page, baseURL }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    const venue = await host(baseURL);
+    await operate(venue, ...questions.map(() => "next" as const));
+    await openGuest(page);
+    await operate(venue, "next");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName("結果発表");
+    await expect(celebration(page)).toHaveCount(0);
+  });
+
+  test("結果発表中に開いたときは紙吹雪を再生しない", async ({ page, baseURL }) => {
+    const venue = await host(baseURL);
+    await operate(venue, ...questions.map(() => "next" as const), "next");
+    await openGuest(page);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName("結果発表");
+    await expect(celebration(page)).toHaveCount(0);
+  });
+});
+
 test.describe("接続が切れている間の表示", () => {
   test("接続が切れると再接続中と表示する", async ({ page, baseURL }) => {
     await operate(await host(baseURL), "next", "next");

@@ -20,7 +20,7 @@ const set = loadQuestionSet(root);
 const { questions } = set;
 const secrets = secretStrings(set);
 const last = questions.length - 1;
-const { intro } = deckOf(set);
+const { intro, outro } = deckOf(set);
 const contentDir = path.resolve(root, process.env.KAKUZUKE_CONTENT_DIR ?? "content");
 const authored = parseYaml(readFileSync(path.join(contentDir, "questions.yaml"), "utf8")) as {
   readonly questions: readonly { readonly options: readonly { readonly image: string }[] }[];
@@ -96,6 +96,21 @@ const LAYOUTS = {
     min: 5,
   },
   prizes: {
+    targets: [
+      ["見出し", ".host-title"],
+      ["ランク", ".intro-prizes tr"],
+      ["ボタン", ".host-btns button"],
+    ],
+    min: 5,
+  },
+  finale: {
+    targets: [
+      ["見出し", ".finale__word"],
+      ["ボタン", ".host-btns button"],
+    ],
+    min: 4,
+  },
+  awards: {
     targets: [
       ["見出し", ".host-title"],
       ["ランク", ".intro-prizes tr"],
@@ -215,10 +230,17 @@ test.describe("司会画面", () => {
         expect(await overflows(page, "question"), `第 ${i + 1} 問の正解発表後`).toEqual([]);
         expect(await photoBoxes(page), `第 ${i + 1} 問の写真の位置が正解発表の前後で同じ`).toEqual(asking);
       }
-      await expect(nextButton(page)).toBeDisabled();
-
       await page.reload();
       await expectRevealed(page, last);
+
+      for (const screen of outro) {
+        await driver.next(page);
+        if (screen === "finale") await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName("結果発表");
+        else await expectIntro(page, "prizes");
+        await expect(revealButton(page), `${screen} の画面に正解発表ボタンを出さない`).toHaveCount(0);
+        expect(await overflows(page, screen), `${screen} の画面`).toEqual([]);
+      }
+      await expect(nextButton(page)).toBeDisabled();
     });
   }
 });
@@ -256,6 +278,16 @@ test.describe("参加者画面", () => {
         await operate(host, "next");
         await expectQuestion(page, i);
       }
+      for (const screen of outro) {
+        await operate(host, "next");
+        if (screen === "finale") {
+          await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName("結果発表");
+        } else {
+          await expect(page.getByRole("heading", { level: 2 })).toHaveText([/ランクと景品/]);
+          await expect(page.getByRole("row")).toHaveText(prizeRows);
+          await expect(page.getByRole("listitem")).toHaveCount(0);
+        }
+      }
     } finally {
       host.close();
     }
@@ -269,8 +301,8 @@ test.describe("参加者画面", () => {
       .filter(({ type }) => !TEXT_TYPE.test(type) && !BINARY_TYPE.test(type));
     expect(unknown, "中身を検査できない種類の応答").toEqual([]);
 
-    expect(traffic.frames.filter((f) => f !== PONG), "つないだ直後・問題の前の画面・各問題のフレームを受け取っている").toHaveLength(
-      1 + intro.length + questions.length,
+    expect(traffic.frames.filter((f) => f !== PONG), "つないだ直後・問題の前の画面・各問題・最終問の後の画面のフレームを受け取っている").toHaveLength(
+      1 + intro.length + questions.length + outro.length,
     );
     expect(texts.some(({ text }) => findSecrets(text, [LEAK_CANARY]).length > 0), "陽性対照: 応答の中身からカナリアを読める").toBe(true);
     const leaks = texts.flatMap(({ url, text }) => findSecrets(text, secrets).map((hit) => `${url}: 「${hit.secret}」 …${hit.context}…`));
