@@ -46,3 +46,11 @@ test("次へが 2 つの参加者画面に届く", async ({ baseURL }) => {
   expect(operated).toMatchObject({ cause: "operated", view: { phase: "asking", index: 0 } });
   expect(received).toEqual([operated, operated]);
 });
+
+test("ログインせずに司会としてつなぐと拒否される", async ({ baseURL }) => {
+  const bare = connect(baseURL!, "host", { cookie: null });
+
+  await expect(bare.next()).rejects.toThrow("host の接続に失敗した");
+  expect(bare.frames).toEqual([]);
+  expect(await connect(baseURL!, "host").next()).toMatchObject({ cause: "joined", view: { phase: "title" } });
+});

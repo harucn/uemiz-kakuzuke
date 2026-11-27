@@ -3,3 +3,6 @@ dist
 .wrangler
 test-results
 playwright-report
+.dev.vars*
+.env*
+playwright/.auth
