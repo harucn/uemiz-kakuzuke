@@ -2,7 +2,7 @@ import { z } from "zod";
 import { deckOf } from "../deck/cursor.ts";
 import type { QuestionSet } from "../question-set/model.ts";
 import { step, TITLE, type VenueState } from "./machine.ts";
-import { parseIntent, type Role, type ServerFrame } from "./protocol.ts";
+import { parseIntent, roleOf, type ServerFrame } from "./protocol.ts";
 import { viewOf } from "./view.ts";
 
 const STATE_KEY = "venue";
@@ -53,7 +53,7 @@ export class VenueRoom {
 
   fetch(request: Request): Response {
     if (request.headers.get("Upgrade") !== "websocket") return new Response(null, { status: 426 });
-    const role: Role = new URL(request.url).searchParams.get("role") === "host" ? "host" : "guest";
+    const role = roleOf(new URL(request.url));
     const [client, server] = Object.values(new WebSocketPair());
     this.#ctx.acceptWebSocket(server, [role]);
     server.send(this.#frame("joined"));

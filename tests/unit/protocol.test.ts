@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseIntent, parseServerFrame, venueUrl } from "../../src/venue/protocol.ts";
+import { parseIntent, parseServerFrame, roleOf, venueUrl } from "../../src/venue/protocol.ts";
 
 const reveal = { headline: "正解は A", explanation: "解説", options: [{ label: "A", correct: true, caption: null }] };
 const frame = (view: unknown, rest: object = {}) =>
@@ -55,5 +55,22 @@ describe("venueUrl", () => {
   it("http は ws、https は wss で会場の入口につなぐ", () => {
     expect(venueUrl("http://localhost:4173", "host")).toBe("ws://localhost:4173/api/venue?role=host");
     expect(venueUrl("https://example.com", "guest")).toBe("wss://example.com/api/venue?role=guest");
+  });
+});
+
+describe("roleOf", () => {
+  const role = (query: string) => roleOf(new URL(`https://kakuzuke.test/api/venue${query}`));
+
+  it("role=host は司会にする", () => {
+    expect(role("?role=host")).toBe("host");
+  });
+
+  it.each([
+    ["guest", "?role=guest"],
+    ["大文字の HOST", "?role=HOST"],
+    ["role がない", ""],
+    ["最初の値が guest", "?role=guest&role=host"],
+  ])("それ以外は参加者にする（%s）", (_, query) => {
+    expect(role(query)).toBe("guest");
   });
 });
