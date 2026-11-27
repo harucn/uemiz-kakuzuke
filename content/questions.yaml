@@ -23,15 +23,15 @@ questions:
     options:
       - { label: A, image: choco_ghana.png, note: "Lotte\nガーナミルク", rank: 2 }
       - { label: B, image: choco_yokoi.png, note: "横井チョコレート\nクーベルチュールチョコレート" , rank: 1 }
-      - { label: C, image: choco_chocoka.jpg, note: "チョコか？", rank: 3 }
+      - { label: C, image: choco_chocoka.jpg, note: "TOPVALU\nチョコか？", rank: 3 }
 
   - title: 日本酒
     description: A,B,C の中で「立山 純米大吟醸 雨晴」はどれ？
     explanation: 雨晴は富山県砺波市の立山酒造が造る純米大吟醸。お米を37%まで磨き、華やかな吟醸香と米の旨味、滑らかな喉越しが特徴です。
     options:
-      - { label: B, image: sake_maru.jpg, note: 白鶴 まる, rank: 2 }
+      - { label: B, image: sake_maru.jpg, note: "白鶴 まる", rank: 2 }
       - { label: C, image: sake_tateyama_junmai.jpeg, note: "立山\n純米大吟醸 雨晴" , rank: 1 }
-      - { label: A, image: sake_tateyama_onecup.png, note: 立山 ワンカップ, rank: 3 }
+      - { label: A, image: sake_tateyama_onecup.png, note: "立山\n本醸造酒 ワンカップ", rank: 3 }
 
   - mode: photo # 写真当て: A・B・C を発表前から出す。note は書かず、caption（誰の写真か）を正解発表後に出す
     title: 子どもの頃の写真
