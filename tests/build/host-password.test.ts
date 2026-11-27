@@ -30,8 +30,9 @@ async function hits(): Promise<{ readonly file: string; readonly at: string }[]>
 
 describe("司会のパスワードを dist/server/.dev.vars の外に出さない", () => {
   if (!password) {
-    if (process.env.CI === "true") {
-      it("CI では dist/server/.dev.vars に HOST_PASSWORD が要る", () => {
+    // CI=true は Workers Builds の本番ビルド（パスワードなし）にも付くので、E2E を流す GitHub Actions だけで落とす
+    if (process.env.GITHUB_ACTIONS === "true") {
+      it("GitHub Actions では dist/server/.dev.vars に HOST_PASSWORD が要る", () => {
         expect.fail("HOST_PASSWORD を設定してビルドする");
       });
     } else {
