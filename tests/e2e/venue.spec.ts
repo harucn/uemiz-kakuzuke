@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { connectVenue, resetVenue, skipIfRemote, type VenueClient } from "./venue.ts";
+import { sessionToken } from "../../src/venue/host-auth.ts";
+import { connectVenue, hostPassword, resetVenue, skipIfRemote, type VenueClient } from "./venue.ts";
 
 const clients: VenueClient[] = [];
 function connect(...args: Parameters<typeof connectVenue>) {
@@ -54,3 +55,19 @@ test("ログインせずに司会としてつなぐと拒否される", async ({
   expect(bare.frames).toEqual([]);
   expect(await connect(baseURL!, "host").next()).toMatchObject({ cause: "joined", view: { phase: "title" } });
 });
+
+for (const [name, cookie] of [
+  ["値を書き換えた Cookie で司会としてつなぐと拒否される", async () => {
+    const token = await sessionToken(hostPassword());
+    return (token[0] === "A" ? "B" : "A") + token.slice(1);
+  }],
+  ["別のパスワードで発行された Cookie で司会としてつなぐと拒否される", () => sessionToken(`${hostPassword()}-old`)],
+] as const) {
+  test(name, async ({ baseURL }) => {
+    const rejected = connect(baseURL!, "host", { cookie: await cookie() });
+
+    await expect(rejected.next()).rejects.toThrow("host の接続に失敗した");
+    expect(rejected.frames).toEqual([]);
+    expect(await connect(baseURL!, "host").next()).toMatchObject({ cause: "joined", view: { phase: "title" } });
+  });
+}

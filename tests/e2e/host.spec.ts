@@ -4,7 +4,7 @@ import jsQR from "jsqr";
 import { PNG } from "pngjs";
 import { answerOf, secretStrings, type Label } from "../../src/question-set/model.ts";
 import { loadQuestionSet } from "../../src/question-set/vite-plugin.ts";
-import { VENUE_PATH } from "../../src/venue/protocol.ts";
+import { HOST_SESSION_PATH, VENUE_PATH } from "../../src/venue/protocol.ts";
 import { revealView } from "../../src/venue/view.ts";
 import { expectLabelsBeforeReveal, expectOptions, expectRevealedOption, labelTraces, optionCard, photoBoxes, settleCards } from "./options.ts";
 import { connectHost, connectVenue, HOST_STATE, hostPassword, operate, relayVenue, resetVenue, skipIfRemote } from "./venue.ts";
@@ -437,6 +437,21 @@ test.describe("接続が切れている間の表示と操作", () => {
     await expect(status(page), "最初の 5 秒は再接続中と出さない").toBeEmpty();
     await expect(status(page)).toHaveText("再接続中", { timeout: 10_000 });
     await expect(page.getByRole("heading")).toHaveCount(0);
+  });
+
+  test("ログイン済みかを確かめられない間は再接続中と表示し、確かめられたら入力欄を出す", async ({ browser }) => {
+    const context = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+    const page = await context.newPage();
+    const sockets = venueSockets(page);
+    await page.route(`**${HOST_SESSION_PATH}`, (route) => route.abort());
+    await page.goto("/host");
+    await expect(status(page)).toHaveText("再接続中");
+    await expect(passwordField(page)).toHaveCount(0);
+    await page.unroute(`**${HOST_SESSION_PATH}`);
+    await expect(passwordField(page)).toBeVisible({ timeout: 10_000 });
+    await expect(status(page)).toHaveCount(0);
+    expect(sockets, "ログイン前に開いた会場への接続").toEqual([]);
+    await context.close();
   });
 
   test("接続が切れている間のキー操作は捨てる", async ({ page, baseURL }) => {

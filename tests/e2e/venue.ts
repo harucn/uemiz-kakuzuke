@@ -42,10 +42,11 @@ export interface VenueClient {
 
 /**
  * Node の WebSocket で会場につなぐ。届いたフレームは取りこぼさないよう、つないだ時点から溜める。
- * 司会は setup で得た Cookie を付ける。{ cookie: null } で外す
+ * 司会は setup で得た Cookie を付ける。{ cookie: null } で外し、{ cookie: 値 } でその値に差し替える
  */
-export function connectVenue(baseURL: string, role: Role, options?: { readonly cookie: null }): VenueClient {
-  const cookie = role === "host" && options === undefined ? hostCookie() : null;
+export function connectVenue(baseURL: string, role: Role, options?: { readonly cookie: string | null }): VenueClient {
+  const cookie =
+    options === undefined ? (role === "host" ? hostCookie() : null) : options.cookie === null ? null : `kakuzuke_host=${options.cookie}`;
   const socket = new NodeWebSocket(venueUrl(baseURL, role), { headers: cookie === null ? {} : { Cookie: cookie } });
   const frames: ServerFrame[] = [];
   let read = 0;
