@@ -10,13 +10,40 @@ import { positionOf } from "../venue/machine.ts";
 import type { Intent, VenueView } from "../venue/protocol.ts";
 import { useVenue } from "../venue/useVenue.ts";
 import { toggleFullscreen, useIsFullscreen } from "./fullscreen.ts";
+import { useExpiryWatch, useHostGate } from "./gate.ts";
+import { HostLogin } from "./HostLogin.tsx";
 import { installHostKeys } from "./keymap.ts";
 import { QrCode } from "./QrCode.tsx";
 
 type Operate = ((intent: Intent) => void) | null;
 
 export function HostScreen({ set }: { readonly set: PublicQuestionSet }) {
+  const { gate, login, expire } = useHostGate();
+  switch (gate.kind) {
+    case "checking":
+      return <HostChecking failures={gate.failures} />;
+    case "locked":
+      return <HostLogin error={gate.error} onSubmit={login} />;
+    case "open":
+      return <HostVenue set={set} onExpired={expire} />;
+  }
+}
+
+/** 事前レンダリングの HTML もこれ。ログイン済みかを確かめられないうちは何も出さず、確かめ直している間は「再接続中」を出す */
+function HostChecking({ failures }: { readonly failures: number }) {
+  return (
+    <main className="host-stage" aria-label="司会画面">
+      <p role="status" className="venue-status">
+        {failures > 0 ? "再接続中" : null}
+      </p>
+    </main>
+  );
+}
+
+/** useVenue("host") を呼ぶのはここだけ。ログインするまでマウントしないので、ログイン前は会場への接続を開かない */
+function HostVenue({ set, onExpired }: { readonly set: PublicQuestionSet; readonly onExpired: () => void }) {
   const { view, connection, celebration, operate } = useVenue("host");
+  useExpiryWatch(connection, onExpired);
   useEffect(() => installHostKeys(window, (intent) => operate?.(intent)), [operate]);
   const position = view === null ? null : positionOf(view);
   const upcoming = position === null ? null : typeof position === "number" ? position + 1 : 0;

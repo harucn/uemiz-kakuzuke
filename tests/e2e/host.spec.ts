@@ -1,12 +1,13 @@
 import path from "node:path";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 import jsQR from "jsqr";
 import { PNG } from "pngjs";
 import { answerOf, secretStrings, type Label } from "../../src/question-set/model.ts";
 import { loadQuestionSet } from "../../src/question-set/vite-plugin.ts";
+import { VENUE_PATH } from "../../src/venue/protocol.ts";
 import { revealView } from "../../src/venue/view.ts";
 import { expectLabelsBeforeReveal, expectOptions, expectRevealedOption, labelTraces, optionCard, photoBoxes, settleCards } from "./options.ts";
-import { connectVenue, relayVenue, resetVenue, skipIfRemote } from "./venue.ts";
+import { connectHost, connectVenue, HOST_STATE, hostPassword, operate, relayVenue, resetVenue, skipIfRemote } from "./venue.ts";
 
 test.beforeEach(async ({ baseURL }) => {
   skipIfRemote();
@@ -90,9 +91,157 @@ async function goTo(page: Page, index: number) {
   }
 }
 
+const passwordField = (page: Page) => page.getByLabel("パスワード");
+const loginButton = (page: Page) => page.getByRole("button", { name: "ログイン" });
+
+async function login(page: Page, password = hostPassword()) {
+  await passwordField(page).fill(password);
+  await loginButton(page).click();
+}
+
+/** ページが開いた会場への WebSocket の URL。goto より前に呼ぶ */
+function venueSockets(page: Page) {
+  const urls: string[] = [];
+  page.on("websocket", (ws) => {
+    if (new URL(ws.url()).pathname === VENUE_PATH) urls.push(ws.url());
+  });
+  return urls;
+}
+
+/** パスワード入力欄とログインのボタンだけが表示され、会のタイトル・QR コード・問題・操作のボタンは表示されていない */
+async function expectLocked(page: Page) {
+  await expect(passwordField(page)).toBeVisible();
+  await expect(loginButton(page)).toBeVisible();
+  await expect(page.getByText(set.title)).toHaveCount(0);
+  await expect(page.getByRole("heading")).toHaveCount(0);
+  await expect(qrCode(page)).toHaveCount(0);
+  await expect(page.locator(".option-card")).toHaveCount(0);
+  for (const button of [prevButton, nextButton, revealButton, fullscreenButton]) await expect(button(page)).toHaveCount(0);
+}
+
+/** ログインで得た Cookie を、同じ名前・場所・属性のまま無効な値に書き換える */
+async function invalidateHostCookie(context: BrowserContext) {
+  const hostCookies = async () => (await context.cookies()).filter((c) => c.name === "kakuzuke_host");
+  const cookies = await hostCookies();
+  expect(cookies, "ログインで得た Cookie").toHaveLength(1);
+  await context.addCookies(cookies.map((c) => ({ ...c, value: "invalid" })));
+  expect((await hostCookies()).map((c) => c.value)).toEqual(["invalid"]);
+}
+
+/** ページを開いてから一度でも「再接続中」が出たか。goto より前に呼ぶ */
+async function watchReconnecting(page: Page) {
+  await page.addInitScript(() => {
+    const w = window as typeof window & { sawReconnecting: boolean };
+    w.sawReconnecting = false;
+    new MutationObserver(() => {
+      if (document.body?.textContent?.includes("再接続中")) w.sawReconnecting = true;
+    }).observe(document, { subtree: true, childList: true, characterData: true });
+  });
+  return () => page.evaluate(() => (window as typeof window & { sawReconnecting: boolean }).sawReconnecting);
+}
+
+test.describe("ログインするまでパスワード入力欄を出す", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test("ログイン前はパスワード入力欄だけを表示する", async ({ page }) => {
+    const sockets = venueSockets(page);
+    await page.goto("/host");
+    await expectLocked(page);
+    await page.waitForLoadState("networkidle");
+    expect(sockets, "ログイン前に開いた会場への接続").toEqual([]);
+    // 陽性対照: ログインすれば同じ記録が会場への接続を捉える
+    await login(page);
+    await expectTitle(page);
+    expect(sockets).toHaveLength(1);
+  });
+
+  test("正しいパスワードで会場の今の画面を表示する", async ({ page, baseURL }) => {
+    const venue = await connectHost(baseURL!);
+    try {
+      expect((await operate(venue, "next", "next")).view, "会場の進行状態").toEqual({ phase: "asking", index: 1 });
+    } finally {
+      venue.close();
+    }
+    await page.goto("/host");
+    await expectLocked(page);
+    await login(page);
+    await expectAsking(page, 1);
+    await expect(passwordField(page)).toHaveCount(0);
+    await nextButton(page).click();
+    await expectAsking(page, 2);
+    await prevButton(page).click();
+    await expectAsking(page, 1);
+    await revealButton(page).click();
+    await expect(page.getByText(questions[1].explanation)).toBeVisible();
+  });
+
+  test("誤ったパスワードでは入力欄のままにする", async ({ page }) => {
+    const sockets = venueSockets(page);
+    await page.goto("/host");
+    await login(page, `${hostPassword()}-wrong`);
+    await expect(page.getByRole("alert")).toHaveText("パスワードが違います");
+    await expectLocked(page);
+    await page.waitForLoadState("networkidle");
+    expect(sockets, "誤ったパスワードの後に開いた会場への接続").toEqual([]);
+  });
+
+  test("ログイン後は再読み込みしても入力欄を出さない", async ({ page }) => {
+    await page.goto("/host");
+    await login(page);
+    await expectTitle(page);
+    await page.reload();
+    await expectTitle(page);
+    await expect(passwordField(page)).toHaveCount(0);
+  });
+
+  test("ログイン後は新しいタブでも入力欄を出さない", async ({ page, context }) => {
+    await page.goto("/host");
+    await login(page);
+    await expectTitle(page);
+    const tab = await context.newPage();
+    await tab.goto("/host");
+    await expectTitle(tab);
+    await expect(passwordField(tab)).toHaveCount(0);
+  });
+});
+
+test.describe("ログインが無効になったら入力欄に戻す", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test("無効な Cookie で開くと入力欄を出す", async ({ page, context }) => {
+    await page.goto("/host");
+    await login(page);
+    await expectTitle(page);
+    await invalidateHostCookie(context);
+    const sawReconnecting = await watchReconnecting(page);
+    const sockets = venueSockets(page);
+    await page.reload();
+    await expectLocked(page);
+    await page.waitForLoadState("networkidle");
+    expect(await sawReconnecting(), "「再接続中」が出た").toBe(false);
+    expect(sockets, "無効な Cookie で開いた会場への接続").toEqual([]);
+  });
+
+  test("つないでいる間に Cookie が無効になると入力欄に戻す", async ({ page, context }) => {
+    const relay = await relayVenue(page);
+    await page.goto("/host");
+    await login(page);
+    await expectTitle(page);
+    await invalidateHostCookie(context);
+    await relay.cut();
+    await expect(passwordField(page), "切れてから 5 秒以内に入力欄に戻す").toBeVisible({ timeout: 5_000 });
+    await expectLocked(page);
+    const attempts = relay.attempts;
+    // ソケットのバックオフの上限 5 秒と揺らぎ 1 秒を超えて待つ。つなぎ直しが残っていればこの間に試みる
+    await page.waitForTimeout(7_000);
+    expect(relay.attempts, "入力欄に戻った後の会場への接続の試み").toBe(attempts);
+    await expectLocked(page);
+  });
+});
+
 test.describe("タイトル画面と QR コード", () => {
   test("会場がタイトル画面のときに開くとタイトル画面を表示する", async ({ browser }) => {
-    const context = await browser.newContext({ baseURL: test.info().project.use.baseURL });
+    const context = await browser.newContext({ baseURL: test.info().project.use.baseURL, storageState: HOST_STATE });
     const page = await context.newPage();
     await openTitle(page);
     await context.close();

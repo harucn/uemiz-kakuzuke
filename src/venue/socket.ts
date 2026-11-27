@@ -55,7 +55,7 @@ type Link =
   | { phase: "attempt"; ws: Socket; timer: Timer }
   | { phase: "live"; ws: Socket; beat: Beat };
 
-/** connecting へ戻る遷移はない。再接続の試行ごとに「再接続中」が点滅しないようにするため */
+/** 購読が 0 になったら初期状態に戻る。それ以外に connecting へ戻る遷移はない。再接続の試行ごとに「再接続中」が点滅しないようにするため */
 function nextConnection(event: "frame" | "lost"): Connection {
   return event === "frame" ? "open" : "lost";
 }
@@ -191,9 +191,14 @@ export function openVenueSocket(url: string, deps: VenueSocketDeps): VenueSocket
     else if (link.phase === "live") ping();
   }
 
+  /** 購読し直したとき（ログインし直したときなど）に、前の問題・「再接続中」・上限まで伸びたバックオフを持ち越さない */
   function close() {
     deps.document.removeEventListener("visibilitychange", onVisibility);
     stopLink();
+    connection = "connecting";
+    frame = null;
+    failures = 0;
+    current = snapshotOf();
   }
 
   return {

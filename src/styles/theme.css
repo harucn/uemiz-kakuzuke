@@ -335,6 +335,34 @@ body {
   grid-template-columns: auto;
   justify-content: end;
 }
+/* 司会画面のログイン。司会画面の地の上に、ドット枠の入力欄とボタンだけを置く */
+.host-login {
+  display: grid;
+  gap: 16px;
+  width: min(360px, calc(100vw - 32px));
+  padding: 24px;
+}
+.host-login__field {
+  display: grid;
+  gap: 8px;
+  color: var(--green-deep);
+}
+.host-login__input {
+  font: inherit;
+  padding: 8px 12px;
+  border: 0;
+  background: var(--cream);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 var(--px) var(--green);
+}
+.host-login__input:focus-visible {
+  outline: 3px dashed var(--red);
+  outline-offset: 4px;
+}
+.host-login__error {
+  margin: 0;
+  color: var(--red);
+}
 /* ルール画面とランクと景品の画面（IntroScreen）。番号とランクはラベルと同じ書体で赤く出す */
 .intro {
   min-height: 0;

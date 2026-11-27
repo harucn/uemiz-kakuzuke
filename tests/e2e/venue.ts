@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
+import { parseEnv } from "node:util";
 import { test, type Page, type Response, type WebSocketRoute } from "@playwright/test";
 import { PONG, parseServerFrame, venueUrl, type Intent, type Role, type ServerFrame } from "../../src/venue/protocol.ts";
 
@@ -11,6 +12,13 @@ export function skipIfRemote() {
 
 /** setup project がログインして書き出す storageState */
 export const HOST_STATE = "playwright/.auth/host.json";
+
+/** 司会のパスワード。vite preview が読むのはビルドが書き出したこのファイルなので、ルートの .dev.vars や .env と食い違わない */
+export function hostPassword(): string {
+  const password = parseEnv(readFileSync("dist/server/.dev.vars", "utf8")).HOST_PASSWORD;
+  if (!password) throw new Error("dist/server/.dev.vars に HOST_PASSWORD がない。HOST_PASSWORD を設定してビルドする");
+  return password;
+}
 
 /** setup が得た司会の Cookie。BASE_URL へ流すときは setup を飛ばすのでファイルがない */
 function hostCookie(): string | null {
