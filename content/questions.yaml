@@ -13,7 +13,7 @@ questions:
     description: A,B,C の中で「となみ野りんご100%ジュース」はどれ？
     explanation: となみ野りんごは富山県砺波市で作られているブランドりんご。そのりんごを贅沢に丸ごと搾った果汁100% ジュースです。
     options:
-      - { label: C, image: 輸入牛.png, note: コンビニの100% ジュース, rank: 2 }
+      - { label: C, image: apple_super.png, note: スーパーの100% ジュース, rank: 2 }
       - { label: B, image: apple_tonamino.jpg, note: となみ野りんご100% ジュース, rank: 1 }
       - { label: A, image: apple_qoo.jpg, note: Qoo りんご, rank: 3 }
 
@@ -26,17 +26,17 @@ questions:
       - { label: C, image: choco_chocoka.jpg, note: "チョコか？", rank: 3 }
 
   - title: 日本酒
-    description: A,B,C の中で「富山の地酒」はどれ？
-    explanation: // TODO # TODO
+    description: A,B,C の中で「立山 純米大吟醸 雨晴」はどれ？
+    explanation: 雨晴は富山県砺波市の立山酒造が造る純米大吟醸。お米を37%まで磨き、華やかな吟醸香と米の旨味、滑らかな喉越しが特徴です。
     options:
-      - { label: A, image: sake_maru.jpg, note: 白鶴まる, rank: 2 }
-      - { label: C, image: 国産牛.png, note: 富山の地酒, rank: 1 } # TODO 地酒の名前
-      - { label: B, image: 輸入牛.png, note: 鬼ころし, rank: 3 }
+      - { label: B, image: sake_maru.jpg, note: 白鶴 まる, rank: 2 }
+      - { label: C, image: sake_tateyama_junmai.jpeg, note: "立山\n純米大吟醸 雨晴" , rank: 1 }
+      - { label: A, image: sake_tateyama_onecup.png, note: 立山 ワンカップ, rank: 3 }
 
   - mode: photo # 写真当て: A・B・C を発表前から出す。note は書かず、caption（誰の写真か）を正解発表後に出す
     title: 子どもの頃の写真
     description: A,B,C の中で「新婦の子どもの頃の写真」はどれ？
-    explanation: 新郎は当てられたかな？？
+    explanation: 新郎は当てられたかな
     options:
       - { label: A, image: little_miz.jpg, caption: "新婦\n上田祐佳里", rank: 1 }
       - { label: B, image: little_sug.jpg, caption: "新郎新婦友人\n杉本愛優花", rank: 2 }
