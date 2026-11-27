@@ -52,7 +52,7 @@ export function GuestScreen({ set }: { readonly set: PublicQuestionSet }) {
       ) : shown === "finale" ? (
         <>
           <FinaleScreen size="guest" />
-          {celebration !== null && <Celebration key={celebration} />}
+          {celebration !== null && <Celebration key={celebration} kind="finale" />}
         </>
       ) : shown === "awards" ? (
         <IntroScreen set={set} screen="awards" size="guest" />

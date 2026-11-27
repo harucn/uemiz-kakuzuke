@@ -46,7 +46,7 @@ export function HostScreen({ set }: { readonly set: PublicQuestionSet }) {
               <Controls position="finale" deck={deckOf(set)} operate={operate} onFullscreen={onFullscreen} />
             </div>
           </div>
-          {celebration !== null && <Celebration key={celebration} />}
+          {celebration !== null && <Celebration key={celebration} kind="finale" />}
         </>
       ) : (
         <Stage key={view.index} set={set} view={view} celebration={celebration} operate={operate} onFullscreen={onFullscreen} />
