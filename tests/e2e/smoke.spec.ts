@@ -23,7 +23,7 @@ test("写真はハッシュ名の URL で配信される", async ({ request }) =
   const sources = [...new Set(set.questions.flatMap((q) => q.options.map((o) => o.image)))];
   expect(sources.length).toBeGreaterThan(0);
   for (const src of sources) {
-    expect(src).toMatch(/^\/images\/[0-9a-f]{12}\.(jpg|png)$/);
+    expect(src).toMatch(/^\/images\/[0-9a-f]{12}\.(jpg|jpeg|png|webp|gif|avif)$/);
     const res = await request.get(src, { maxRedirects: 0 });
     expect(res.status()).toBe(200);
     expect(res.headers()["content-type"]).toMatch(/^image\//);
