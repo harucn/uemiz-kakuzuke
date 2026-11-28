@@ -60,8 +60,11 @@ function nextConnection(event: "frame" | "lost"): Connection {
   return event === "frame" ? "open" : "lost";
 }
 
+/** 紙吹雪は司会が操作して正解発表か結果発表の画面にしたときだけ打つ。途中から開いた画面や再接続では打たない */
 export function celebrationOf(frame: ServerFrame | null): string | null {
-  return frame?.cause === "operated" && frame.view.phase === "revealed" ? `${frame.view.index}:${frame.view.run}` : null;
+  if (frame?.cause !== "operated") return null;
+  const { view } = frame;
+  return view.phase === "revealed" ? `${view.index}:${view.run}` : view.phase === "finale" ? "finale" : null;
 }
 
 /** 同じ版に対しては 1 回だけ true。記録できない環境では再読み込みの連鎖を避けて false */

@@ -44,6 +44,8 @@ const VenueViewSchema = z.discriminatedUnion("phase", [
   z.strictObject({ phase: z.literal("title") }),
   z.strictObject({ phase: z.literal("rules") }),
   z.strictObject({ phase: z.literal("prizes") }),
+  z.strictObject({ phase: z.literal("finale") }),
+  z.strictObject({ phase: z.literal("awards") }),
   z.strictObject({ phase: z.literal("asking"), index }),
   z.strictObject({ phase: z.literal("revealed"), index, run: z.number().int().positive(), reveal: RevealViewSchema }),
 ]);
