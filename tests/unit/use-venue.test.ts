@@ -274,6 +274,30 @@ describe("openVenueSocket", () => {
     expect(second.reload).toHaveBeenCalledTimes(1);
   });
 
+  it("閉じてから購読し直すと、古い問題が出ず、バックオフが最初の値から始まる", () => {
+    const t = setup({ random: 0.5 });
+    const unsubscribe = t.open();
+    t.last().receive(frame(ASKING));
+    for (let i = 0; i < 5; i++) {
+      t.last().drop();
+      vi.advanceTimersToNextTimer();
+    }
+    t.last().drop();
+    expect(t.venue.snapshot()).toMatchObject({ view: ASKING, connection: "lost", operate: null });
+    unsubscribe();
+    expect(t.venue.snapshot()).toMatchObject({ view: null, connection: "connecting", celebration: null, operate: null });
+
+    const before = t.sockets.length;
+    t.open();
+    expect(t.sockets).toHaveLength(before + 1);
+    expect(t.venue.snapshot()).toMatchObject({ view: null, connection: "connecting" });
+    t.last().drop();
+    vi.advanceTimersByTime(999);
+    expect(t.sockets, "最初のバックオフ（500ms と揺らぎ 500ms）より前には再接続しない").toHaveLength(before + 1);
+    vi.advanceTimersByTime(1);
+    expect(t.sockets, "最初のバックオフで再接続する").toHaveLength(before + 2);
+  });
+
   it("最後の購読をやめるとソケットを閉じ、タイマーも止める", () => {
     const t = setup();
     const unsubscribe = t.open();

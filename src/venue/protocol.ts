@@ -2,11 +2,17 @@ import { z } from "zod";
 
 export const VENUE_PATH = "/api/venue";
 export const VENUE_NAME = "venue";
+export const HOST_SESSION_PATH = "/api/host-session";
 /** DO の自動応答とクライアントで共有する */
 export const PING = "ping";
 export const PONG = "pong";
 
 export type Role = "host" | "guest";
+
+/** role のクエリから役割を決める。"host" だけが host で、それ以外は guest。同じキーが複数あれば最初の値（URLSearchParams.get） */
+export function roleOf(url: URL): Role {
+  return url.searchParams.get("role") === "host" ? "host" : "guest";
+}
 
 const IntentSchema = z.strictObject({ type: z.enum(["next", "prev", "reveal"]) });
 export type Intent = z.infer<typeof IntentSchema>;

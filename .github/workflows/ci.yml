@@ -16,6 +16,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      # テスト専用の値。本番の値ではないので、fork からの PR でも E2E を流せるよう GitHub secret にしない
+      HOST_PASSWORD: ci-e2e-password
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6

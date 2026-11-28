@@ -11,6 +11,7 @@
     "bindings": [{ "name": "VENUE", "class_name": "Venue" }]
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Venue"] }],
+  "secrets": { "required": ["HOST_PASSWORD"] },
   "previews": {
     "durable_objects": {
       "bindings": [{ "name": "VENUE", "class_name": "Venue" }]

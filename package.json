@@ -5,11 +5,11 @@
   "packageManager": "pnpm@10.32.0",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build && vitest run --project build",
+    "build": "vite build && vitest run --project build --reporter=verbose",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.worker.json",
     "test": "vitest run --project unit",
-    "e2e": "KAKUZUKE_CONTENT_DIR=tests/fixtures/content pnpm build && playwright test --project=scenario && pnpm build && playwright test --project=content",
+    "e2e": "export HOST_PASSWORD=${HOST_PASSWORD:-e2e-password}; KAKUZUKE_CONTENT_DIR=tests/fixtures/content pnpm build && playwright test --project=scenario && pnpm build && playwright test --project=content",
     "deploy": "pnpm test && pnpm build && wrangler deploy",
     "deploy:preview": "pnpm test && pnpm build && wrangler preview"
   },

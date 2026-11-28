@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from "node:fs";
+import { parseEnv } from "node:util";
 import { test, type Page, type Response, type WebSocketRoute } from "@playwright/test";
 import { PONG, parseServerFrame, venueUrl, type Intent, type Role, type ServerFrame } from "../../src/venue/protocol.ts";
 
@@ -8,6 +10,27 @@ export function skipIfRemote() {
   test.skip(remote, "BASE_URL の会場は動かさない");
 }
 
+/** setup project がログインして書き出す storageState */
+export const HOST_STATE = "playwright/.auth/host.json";
+
+/** 司会のパスワード。vite preview が読むのはビルドが書き出したこのファイルなので、ルートの .dev.vars や .env と食い違わない */
+export function hostPassword(): string {
+  const password = parseEnv(readFileSync("dist/server/.dev.vars", "utf8")).HOST_PASSWORD;
+  if (!password) throw new Error("dist/server/.dev.vars に HOST_PASSWORD がない。HOST_PASSWORD を設定してビルドする");
+  return password;
+}
+
+/** setup が得た司会の Cookie。BASE_URL へ流すときは setup を飛ばすのでファイルがない */
+function hostCookie(): string | null {
+  if (!existsSync(HOST_STATE)) return null;
+  const { cookies } = JSON.parse(readFileSync(HOST_STATE, "utf8")) as { cookies: { name: string; value: string }[] };
+  const cookie = cookies.find((c) => c.name === "kakuzuke_host");
+  return cookie === undefined ? null : `${cookie.name}=${cookie.value}`;
+}
+
+/** Node 26 のグローバル WebSocket（undici）は headers を受けるが、DOM の lib の型では受けないので型を付け直す */
+const NodeWebSocket = WebSocket as unknown as new (url: string, init: { readonly headers: Record<string, string> }) => WebSocket;
+
 export interface VenueClient {
   /** 受け取ったフレームすべて */
   readonly frames: readonly ServerFrame[];
@@ -17,9 +40,14 @@ export interface VenueClient {
   close(): void;
 }
 
-/** Node の WebSocket で会場につなぐ。届いたフレームは取りこぼさないよう、つないだ時点から溜める */
-export function connectVenue(baseURL: string, role: Role): VenueClient {
-  const socket = new WebSocket(venueUrl(baseURL, role));
+/**
+ * Node の WebSocket で会場につなぐ。届いたフレームは取りこぼさないよう、つないだ時点から溜める。
+ * 司会は setup で得た Cookie を付ける。{ cookie: null } で外し、{ cookie: 値 } でその値に差し替える
+ */
+export function connectVenue(baseURL: string, role: Role, options?: { readonly cookie: string | null }): VenueClient {
+  const cookie =
+    options === undefined ? (role === "host" ? hostCookie() : null) : options.cookie === null ? null : `kakuzuke_host=${options.cookie}`;
+  const socket = new NodeWebSocket(venueUrl(baseURL, role), { headers: cookie === null ? {} : { Cookie: cookie } });
   const frames: ServerFrame[] = [];
   let read = 0;
   let wake: (() => void) | null = null;

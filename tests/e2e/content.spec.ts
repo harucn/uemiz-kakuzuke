@@ -4,7 +4,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { parse as parseYaml } from "yaml";
 import { LEAK_CANARY } from "../../src/guest/leak-canary.ts";
 import { deckOf } from "../../src/deck/cursor.ts";
-import { PONG } from "../../src/venue/protocol.ts";
+import { PONG, VENUE_PATH } from "../../src/venue/protocol.ts";
 import { revealView } from "../../src/venue/view.ts";
 import { secretStrings, type Label } from "../../src/question-set/model.ts";
 import { loadQuestionSet } from "../../src/question-set/vite-plugin.ts";
@@ -189,21 +189,30 @@ const drivers = [
   { name: "キー", reveal: (page: Page) => page.keyboard.press("Space"), next: (page: Page) => page.keyboard.press("ArrowRight") },
 ];
 
-test.describe("司会画面", () => {
-  test.use({ viewport: { width: 1920, height: 1080 } });
+test.describe("ログイン前の司会画面", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
 
-  // 会場を動かさないので BASE_URL でも流す。正解は会場からの WebSocket でだけ届き、HTTP の応答には載らない
-  test("開いてもサーバー関数を呼ばず、HTTP の応答に正解情報がない", async ({ page }) => {
+  // 会場を動かさずパスワードも要らないので BASE_URL でも流す。正解はログインした司会の WebSocket でだけ届き、HTTP の応答には載らない
+  test("入力欄を出し、サーバー関数を呼ばず、HTTP の応答に正解情報がなく、会場へつながない", async ({ page }) => {
     const traffic = recordTraffic(page);
+    const sockets: string[] = [];
+    page.on("websocket", (ws) => sockets.push(ws.url()));
     await page.goto("/host");
-    await expect(page.locator(".host")).toBeVisible();
+    await expect(page.getByLabel("パスワード")).toBeVisible();
+    await expect(page.getByRole("button", { name: "ログイン" })).toBeVisible();
+    await page.waitForLoadState("networkidle");
     const texts = await traffic.http();
 
     expect(texts.map(({ url }) => new URL(url).pathname), "/host の HTML を検査できている").toContain("/host");
     expect(traffic.requests.filter((url) => url.includes(SERVER_FN))).toEqual([]);
     const leaks = texts.flatMap(({ url, text }) => findSecrets(text, secrets).map((hit) => `${url}: 「${hit.secret}」 …${hit.context}…`));
     expect(leaks).toEqual([]);
+    expect(sockets.filter((url) => new URL(url).pathname === VENUE_PATH), "ログイン前に開いた会場への接続").toEqual([]);
   });
+});
+
+test.describe("司会画面", () => {
+  test.use({ viewport: { width: 1920, height: 1080 } });
 
   for (const driver of drivers) {
     test(`${driver.name}で全問を進めて正解発表し、溢れない`, async ({ page }) => {
